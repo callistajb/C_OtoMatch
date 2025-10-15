@@ -56,7 +56,7 @@
             android:id="@+id/btnFavorite"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:src="@drawable/ic_favorite_border"
+            android:src="@drawable/ic_wishlist_border"
             android:tint="#E53935"
             android:contentDescription="Favorite button" />
 

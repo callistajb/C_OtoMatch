@@ -40,13 +40,13 @@ class CarAdapter(
         }
 
         holder.btnFavorite.setOnClickListener {
-            car.isFavorite = !car.isFavorite
+            car.isWishlist = !car.isWishlist
             holder.btnFavorite.setImageResource(
-                if (car.isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+                if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
             )
             Toast.makeText(
                 holder.itemView.context,
-                if (car.isFavorite) "Ditambahkan ke wishlist" else "Dihapus dari wishlist",
+                if (car.isWishlist) "Ditambahkan ke wishlist" else "Dihapus dari wishlist",
                 Toast.LENGTH_SHORT
             ).show()
         }

@@ -3,6 +3,8 @@
     <style name="Base.Theme.C_OtoMatch" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/blue_700</item>
+        <item name="colorOnPrimary">@android:color/white</item>
     </style>
 
     <style name="Theme.C_OtoMatch" parent="Base.Theme.C_OtoMatch" />

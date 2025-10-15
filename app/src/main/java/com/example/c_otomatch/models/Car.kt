@@ -9,5 +9,5 @@ data class Car(
     val mileage: String,
     val location: String,
     val imageResId: Int,
-    var isFavorite: Boolean
+    var isWishlist: Boolean
 )
