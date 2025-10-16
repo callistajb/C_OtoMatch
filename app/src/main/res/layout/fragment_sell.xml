@@ -1,13 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView
+
+    <!-- RecyclerView untuk daftar mobil -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerSellCars"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Sell Page"
-        android:textSize="24sp" />
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical" />
 
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Floating Action Button untuk tambah mobil -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddCar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="110dp"
+        android:layout_marginEnd="24dp"
+        android:contentDescription="Tambah Mobil"
+        app:srcCompat="@drawable/ic_add"
+        app:tint="@android:color/white"
+        android:backgroundTint="@color/blue_700"
+        android:elevation="8dp"
+        app:borderWidth="0dp"
+        app:useCompatPadding="true" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

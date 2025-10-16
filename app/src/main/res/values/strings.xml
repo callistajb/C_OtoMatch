@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">C_OtoMatch</string>
+    <string name="profile_name">Callista Jasmine</string>
+    <string name="profile_location">📍 Tangerang, Indonesia</string>
+    <string name="title_sell_car">Jual Mobil</string>
+    <string name="desc_preview_mobil">Preview mobil</string>
+    <string name="btn_kamera">Kamera</string>
+    <string name="btn_galeri">Galeri</string>
+    <string name="hint_merek">Merek (wajib)</string>
+    <string name="hint_model">Tipe / Model (wajib)</string>
+    <string name="hint_tahun">Tahun (wajib)</string>
+    <string name="hint_pajak">Pajak / STNK</string>
+    <string name="hint_warna">Warna asli (wajib)</string>
+    <string name="hint_km">Kilometer (wajib)</string>
+    <string name="hint_lokasi">Lokasi (wajib)</string>
+    <string name="hint_minus">Minus / Kerusakan (opsional)</string>
+    <string name="hint_modif">Modifikasi (opsional)</string>
+    <string name="hint_harga">Harga (boleh kosong untuk generate)</string>
+    <string name="btn_generate">Generate Saran Harga</string>
+    <string name="tv_harga_saran">Harga saran: -</string>
+    <string name="tv_catatan">Catatan: harga yang digenerate hanya saran, masih bisa diedit.</string>
+    <string name="btn_submit">Submit &amp; Post</string>
 </resources>

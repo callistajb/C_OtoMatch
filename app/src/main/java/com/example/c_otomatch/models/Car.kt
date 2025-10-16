@@ -2,12 +2,13 @@ package com.example.c_otomatch.models
 
 data class Car(
     val id: Int,
-    val name: String,
-    val brand: String,
-    val year: Int,
-    val price: String,
-    val mileage: String,
-    val location: String,
-    val imageResId: Int,
-    var isWishlist: Boolean
+    var name: String,
+    var brand: String,
+    var year: Int,
+    var price: String,
+    var mileage: String,
+    var location: String,
+    var imageResId: Int,
+    var isWishlist: Boolean,
+    var isSold: Boolean = false
 )
