@@ -11,7 +11,7 @@ import com.example.c_otomatch.R
 import com.example.c_otomatch.models.Car
 
 class CarAdapter(
-    private val carList: List<Car>,
+    private var carList: List<Car>,
     private val onItemClicked: (Car) -> Unit
 ) : RecyclerView.Adapter<CarAdapter.CarViewHolder>() {
 
@@ -35,26 +35,17 @@ class CarAdapter(
         holder.tvCarBrand.text = car.brand
         holder.tvCarPrice.text = car.price
 
-        // Set icon awal sesuai status wishlist
         holder.btnFavorite.setImageResource(
             if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
         )
 
-        // Klik item → buka detail (kalau ada callback)
-        holder.itemView.setOnClickListener {
-            onItemClicked(car)
-        }
+        holder.itemView.setOnClickListener { onItemClicked(car) }
 
-        // Klik tombol hati → ubah status
         holder.btnFavorite.setOnClickListener {
             car.isWishlist = !car.isWishlist
-
-            // Ganti icon-nya langsung
             holder.btnFavorite.setImageResource(
                 if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
             )
-
-            // Feedback Toast
             Toast.makeText(
                 holder.itemView.context,
                 if (car.isWishlist) "Ditambahkan ke wishlist" else "Dihapus dari wishlist",
@@ -64,4 +55,9 @@ class CarAdapter(
     }
 
     override fun getItemCount() = carList.size
+
+    fun updateList(newList: List<Car>) {
+        carList = newList
+        notifyDataSetChanged()
+    }
 }

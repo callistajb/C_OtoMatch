@@ -30,6 +30,7 @@
 
             <TextView
                 android:id="@+id/tvCarName"
+                android:fontFamily="@font/lato_regular"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Civic Turbo"
@@ -38,6 +39,7 @@
 
             <TextView
                 android:id="@+id/tvCarBrand"
+                android:fontFamily="@font/lato_regular"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Honda"
@@ -45,10 +47,11 @@
 
             <TextView
                 android:id="@+id/tvCarPrice"
+                android:fontFamily="@font/lato_regular"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Rp 420.000.000"
-                android:textColor="#D32F2F"
+                android:textColor="@color/red"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -57,7 +60,7 @@
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:src="@drawable/ic_wishlist_border"
-            android:tint="#E53935"
+            android:tint="@color/accent_pink"
             android:contentDescription="Favorite button" />
 
     </LinearLayout>

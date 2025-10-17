@@ -17,6 +17,7 @@ import com.example.c_otomatch.SellCarActivity
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.databinding.FragmentSellBinding
 import com.example.c_otomatch.models.Car
+import kotlin.Int
 
 
 class SellFragment : Fragment() {
@@ -40,8 +41,38 @@ class SellFragment : Fragment() {
         // Dummy data awal
         myCars.addAll(
             listOf(
-                Car(1, "Civic Turbo", "Honda", 2021, "Rp 420.000.000", "20.000 km", "Tangerang", R.drawable.civic, false),
-                Car(2, "Fortuner VRZ", "Toyota", 2020, "Rp 520.000.000", "35.000 km", "Jakarta", R.drawable.fortuner, false)
+                Car(
+                    id = 1,
+                    name = "Civic Turbo",
+                    brand = "Honda",
+                    year = 2021,
+                    price = "Rp 420.000.000",
+                    mileage = "20.000 km",
+                    location = "Tangerang",
+                    imageResId = R.drawable.civic,
+                    isWishlist = false,
+                    bodyType = "Sedan",
+                    color = "Hitam",
+                    transmission = "Automatic",
+                    fuel = "Bensin",
+                    kmRange = "<50.000 km"
+                ),
+                Car(
+                    id = 2,
+                    name = "Fortuner VRZ",
+                    brand = "Toyota",
+                    year = 2020,
+                    price = "Rp 520.000.000",
+                    mileage = "35.000 km",
+                    location = "Jakarta",
+                    imageResId = R.drawable.fortuner,
+                    isWishlist = false,
+                    bodyType = "SUV",
+                    color = "Putih",
+                    transmission = "Automatic",
+                    fuel = "Diesel",
+                    kmRange = "50.000-100.000 km"
+                )
             )
         )
 
@@ -88,7 +119,12 @@ class SellFragment : Fragment() {
                 location = location,
                 imageResId = imageToUse,
                 isWishlist = false,
-                isSold = false
+                isSold = false,
+                bodyType = "",
+                color = "",
+                transmission = "",
+                fuel = "",
+                kmRange = ""
             )
             myCars.add(0, newCar) // insert at top
             adapter.notifyItemInserted(0)

@@ -1,28 +1,48 @@
 package com.example.c_otomatch
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.example.c_otomatch.fragments.*
+import com.example.c_otomatch.utils.Prefs
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
+    private lateinit var imgLogo: ImageView
+    private lateinit var tvGreeting: TextView
+    private lateinit var etSearch: EditText
+    private var currentFragment: Fragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 🔹 Setup Toolbar
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-
-        // 🔹 Setup Bottom Nav
         bottomNav = findViewById(R.id.bottomNavigation)
+        imgLogo = findViewById(R.id.imgLogo)
+        tvGreeting = findViewById(R.id.tvGreeting)
+        etSearch = findViewById(R.id.etSearch)
+
+        // Greeting dari SharedPreferences
+        val userName = Prefs.getName(this)
+        tvGreeting.text = if (!userName.isNullOrEmpty()) "Hi, $userName" else "Hi, Selamat datang!"
+
+        // Klik logo → kembali ke Home
+        imgLogo.setOnClickListener {
+            bottomNav.selectedItemId = R.id.nav_home
+            loadFragment(HomeFragment())
+        }
+
+        // Load default fragment
         loadFragment(HomeFragment())
 
+        // Bottom Navigation
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> loadFragment(HomeFragment())
@@ -33,20 +53,22 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        bottomNav.setOnItemReselectedListener { /* do nothing */ }
+        bottomNav.setOnItemReselectedListener { }
+
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s.toString().trim()
+                if (currentFragment is HomeFragment) {
+                    (currentFragment as HomeFragment).filterCars(query)
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     private fun loadFragment(fragment: Fragment) {
-        // 🔹 Title Otomatis
-        supportActionBar?.title = when (fragment) {
-            is HomeFragment -> "Home"
-            is WishlistFragment -> "Wishlist"
-            is SellFragment -> "Jual Mobil"
-            is ProfileFragment -> "Profile"
-            else -> "OtoMatch"
-        }
-
-        // 🔹 Transisi Animasi
+        currentFragment = fragment
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.slide_in_right,

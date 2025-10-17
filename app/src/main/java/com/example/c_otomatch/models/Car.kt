@@ -10,5 +10,11 @@ data class Car(
     var location: String,
     var imageResId: Int,
     var isWishlist: Boolean,
-    var isSold: Boolean = false
+    var isSold: Boolean = false,
+    var bodyType: String = "",
+    var color: String = "",
+    var transmission: String = "",
+    var fuel: String = "",
+    var kmRange: String = ""
 )
+

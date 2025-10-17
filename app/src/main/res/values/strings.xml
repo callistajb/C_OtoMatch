@@ -20,4 +20,15 @@
     <string name="tv_harga_saran">Harga saran: -</string>
     <string name="tv_catatan">Catatan: harga yang digenerate hanya saran, masih bisa diedit.</string>
     <string name="btn_submit">Submit &amp; Post</string>
+    <string name="brand">Brand</string>
+    <string name="body_type">Body Type</string>
+    <string name="color">Color</string>
+    <string name="transmission">Transmission</string>
+    <string name="year">Year</string>
+    <string name="price">Price</string>
+    <string name="location">Location</string>
+    <string name="fuel">Fuel</string>
+    <string name="km">KM</string>
+
+
 </resources>

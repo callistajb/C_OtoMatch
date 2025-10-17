@@ -4,40 +4,94 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:fitsSystemWindows="true">
 
-    <!-- 🔹 Toolbar di atas -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Header (Logo + Greeting + Search) -->
+
+    <!-- Fragment Container -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="6dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:title="OtoMatch 🚘"
-        android:titleTextColor="@android:color/white"
-        app:titleTextAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_collapseMode="pin" />
+        android:layout_height="110dp"
+        android:background="@color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="60dp"
+        app:layout_anchor="@+id/headerLayout"
+        app:layout_anchorGravity="top|center">
 
-    <!-- 🔹 Fragment Container -->
+        <!-- Logo -->
+        <ImageView
+            android:id="@+id/imgLogo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="Logo OtoMatch"
+            android:src="@drawable/logo_otomatch" />
+
+        <!-- Greeting -->
+        <TextView
+            android:id="@+id/tvGreeting"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/playfair_display"
+            android:text="Hi, Guest"
+            android:textColor="@color/blue"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- Search Bar -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:background="@drawable/search_background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="6dp"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="@color/blue" />
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="160dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="Cari mobil..."
+                android:singleLine="true"
+                android:textColor="@color/blue"
+                android:textColorHint="#6699CC"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:layout_above="@id/bottomNavigation" />
+        android:layout_height="750dp"
+        android:layout_marginTop="70dp"
+        android:layout_marginBottom="10dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- 🔹 Bottom Navigation -->
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/white"
-        app:menu="@menu/bottom_nav_menu"
+        android:background="@color/white_bg"
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
-        app:labelVisibilityMode="labeled" />
+        app:labelVisibilityMode="labeled"
+        app:layout_anchor="@+id/fragmentContainer"
+        app:layout_anchorGravity="bottom|center"
+        app:menu="@menu/bottom_nav_menu" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,6 +1,5 @@
 package com.example.c_otomatch.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,51 +7,43 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.c_otomatch.CarDetailActivity
 import com.example.c_otomatch.R
 import com.example.c_otomatch.adapters.CarAdapter
+import com.example.c_otomatch.models.Car
 import com.example.c_otomatch.utils.Data
 
 class HomeFragment : Fragment() {
 
-    // Declare recyclerView as a class property
     private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: CarAdapter
+    private lateinit var carList: MutableList<Car>
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        // Initialize the recyclerView property
-        recyclerView = view.findViewById<RecyclerView>(R.id.rvCars)
+        recyclerView = view.findViewById(R.id.rvCars)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Adapter dengan klik → pindah ke detail mobil
-        val adapter = CarAdapter(Data.carList) { selectedCar ->
-
-            // Intent ke CarDetailActivity
-            val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
-                putExtra("car_name", selectedCar.name)
-                putExtra("car_brand", selectedCar.brand)
-                putExtra("car_year", selectedCar.year)
-                putExtra("car_price", selectedCar.price)
-                putExtra("car_mileage", selectedCar.mileage)
-                putExtra("car_location", selectedCar.location)
-                putExtra("car_image", selectedCar.imageResId)
-            }
-
-            startActivity(intent)
-        }
-
+        carList = Data.carList.toMutableList()
+        adapter = CarAdapter(carList) {}
         recyclerView.adapter = adapter
+
         return view
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Now recyclerView is accessible here
-        recyclerView.adapter?.notifyDataSetChanged()
+    fun filterCars(query: String) {
+        val filtered = if (query.isEmpty()) {
+            Data.carList
+        } else {
+            Data.carList.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.brand.contains(query, ignoreCase = true)
+            }
+        }
+        adapter.updateList(filtered)
     }
-
 }

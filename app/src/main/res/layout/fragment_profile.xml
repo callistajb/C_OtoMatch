@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,123 +12,128 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- FOTO PROFIL -->
+        <!-- Foto Profil -->
         <ImageView
-            android:id="@+id/profileImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:id="@+id/ivProfile"
+            android:layout_width="110dp"
+            android:layout_height="110dp"
             android:src="@drawable/ic_person"
-            android:scaleType="centerCrop"
+            android:layout_marginTop="16dp"
             android:background="@drawable/circle_bg"
-            android:padding="4dp" />
+            android:scaleType="centerCrop"
+            android:contentDescription="Foto profil"
+            android:clipToOutline="true" />
 
-        <!-- NAMA -->
+        <!-- Nama & Username -->
         <TextView
-            android:id="@+id/profileName"
+            android:id="@+id/tvName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/profile_name"
+            android:text="Nama Pengguna"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginTop="12dp" />
+            android:layout_marginTop="12dp"
+            android:textColor="@color/black" />
 
-        <!-- LOKASI -->
         <TextView
-            android:id="@+id/profileLocation"
+            android:id="@+id/tvUsername"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/profile_location"
-            android:textColor="@color/gray"
-            android:layout_marginBottom="16dp" />
+            android:text="username@email.com"
+            android:textSize="14sp"
+            android:textColor="@color/gray" />
 
-        <!-- KONTAK -->
+        <!-- Rating -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/profile_card_bg"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Kontak"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📞 0812-3456-7890" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✉️ callista@email.com" />
-        </LinearLayout>
-
-        <!-- MOBIL YANG DIJUAL -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/profile_card_bg"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mobil yang Dijual"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="• Honda Jazz 2017" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="• Toyota Yaris 2020" />
-        </LinearLayout>
-
-        <!-- RATING -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/profile_card_bg"
-            android:padding="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rating Penjual"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="8dp">
 
             <RatingBar
-                android:id="@+id/profileRating"
+                android:id="@+id/ratingBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:numStars="5"
-                android:rating="4.5"
+                android:rating="4"
+                android:isIndicator="true"
                 android:stepSize="0.5"
-                android:isIndicator="true" />
+                style="?android:attr/ratingBarStyleSmall" />
 
             <TextView
-                android:id="@+id/profileReviewCount"
+                android:id="@+id/tvRatingValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="(120 ulasan)"
-                android:textColor="@color/gray"
-                android:textSize="12sp" />
+                android:text="(4.5)"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/black" />
         </LinearLayout>
+
+        <!-- Info Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/profile_card_bg"
+            android:padding="16dp"
+            android:layout_marginTop="20dp"
+            android:elevation="3dp">
+
+            <TextView
+                android:text="Nomor Telepon:"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/gray"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/tvPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="+62 812xxxxxxx"
+                android:textColor="@color/black"
+                android:textSize="15sp"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:text="Lokasi:"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/gray"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/tvLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gading Serpong, Tangerang"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- Tombol Aksi -->
+        <Button
+            android:id="@+id/btnEditProfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Edit Profil"
+            android:layout_marginTop="24dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        <Button
+            android:id="@+id/btnViewReviews"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lihat Ulasan"
+            android:layout_marginTop="8dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Logout"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/red"
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 </ScrollView>

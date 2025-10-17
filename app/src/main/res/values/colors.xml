@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="blue">#2196F3</color>
-    <color name="blue_700">#1565C0</color>
-    <color name="blue_900">#0D47A1</color>
+    <color name="blue">#1a1a2e</color>
+    <color name="white_bg">#f9f5f0</color>
+    <color name="red">#50242a</color>
+    <color name="green">#233326</color>
+
+    <color name="accent_gold">#e5d0a7</color>
+    <color name="accent_pink">#E7BCB4</color>
+    <color name="text_primary">#091c2a</color>
+    <color name="text_secondary">#50242a</color>
+
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="gray">#9E9E9E</color>
-    <color name="teal_700">#00796B</color>
-    <color name="purple_500">#6200EE</color>
+    <color name="light_gray">#d3d3d3</color>
 </resources>

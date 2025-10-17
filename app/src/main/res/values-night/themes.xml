@@ -1,7 +1,21 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.C_OtoMatch" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+    <!-- Base Dark Theme -->
+    <style name="Base.Theme.C_OtoMatch" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#0e2d42</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">#134b66</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+
+        <item name="android:colorBackground">#091c2a</item>
+        <item name="colorSurface">#0e2d42</item>
+        <item name="colorOnSurface">#ffffff</item>
+
+        <item name="android:fontFamily">@font/lato_regular</item>
+
+        <item name="android:statusBarColor">#091c2a</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <style name="Theme.C_OtoMatch" parent="Base.Theme.C_OtoMatch" />
 </resources>

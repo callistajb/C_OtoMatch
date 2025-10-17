@@ -38,7 +38,7 @@ android:padding="16dp">
     <TextView
         android:id="@+id/tvCarPriceDetail"
         android:textSize="20sp"
-        android:textColor="@android:color/holo_red_dark"
+        android:textColor="@color/green"
         android:layout_marginTop="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Filter Mobil"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- Brand -->
+        <TextView
+            android:text="Brand"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerBrand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Warna -->
+        <TextView
+            android:text="Warna"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerColor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Transmisi -->
+        <TextView
+            android:text="Transmisi"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerTransmission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Harga -->
+        <TextView
+            android:text="Harga"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Sort -->
+        <TextView
+            android:text="Urutkan berdasarkan"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerSort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btnApplyFilter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/blue"
+            android:text="Terapkan Filter"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</ScrollView>
