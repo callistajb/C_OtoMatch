@@ -25,5 +25,11 @@
         <item name="android:navigationBarColor">#091c2a</item>
     </style>
 
+    <style name="NoActiveIndicator" parent="">
+        <item name="android:color">@android:color/transparent</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+    </style>
+
+
     <style name="Theme.C_OtoMatch" parent="Base.Theme.C_OtoMatch" />
 </resources>

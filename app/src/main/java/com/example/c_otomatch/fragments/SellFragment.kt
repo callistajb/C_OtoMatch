@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.c_otomatch.R
@@ -17,8 +16,6 @@ import com.example.c_otomatch.SellCarActivity
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.databinding.FragmentSellBinding
 import com.example.c_otomatch.models.Car
-import kotlin.Int
-
 
 class SellFragment : Fragment() {
 
@@ -38,7 +35,7 @@ class SellFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Dummy data awal
+        // Data dummy awal mobil yang dijual oleh pengguna
         myCars.addAll(
             listOf(
                 Car(
@@ -51,6 +48,9 @@ class SellFragment : Fragment() {
                     location = "Tangerang",
                     imageResId = R.drawable.civic,
                     isWishlist = false,
+                    isSold = false,
+                    sellerName = "Anda",
+                    sellerContact = "08123456789",
                     bodyType = "Sedan",
                     color = "Hitam",
                     transmission = "Automatic",
@@ -67,6 +67,9 @@ class SellFragment : Fragment() {
                     location = "Jakarta",
                     imageResId = R.drawable.fortuner,
                     isWishlist = false,
+                    isSold = false,
+                    sellerName = "Anda",
+                    sellerContact = "08123456789",
                     bodyType = "SUV",
                     color = "Putih",
                     transmission = "Automatic",
@@ -83,6 +86,7 @@ class SellFragment : Fragment() {
         binding.recyclerSellCars.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerSellCars.adapter = adapter
 
+        // Tombol tambah mobil baru
         binding.fabAddCar.setOnClickListener {
             val intent = Intent(requireContext(), SellCarActivity::class.java)
             intent.putExtra("next_id", myCars.size + 1)
@@ -90,7 +94,7 @@ class SellFragment : Fragment() {
         }
     }
 
-    // di class SellFragment : Fragment() { ... }
+    // Launcher untuk menerima data dari SellCarActivity
     private val addCarLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -103,11 +107,7 @@ class SellFragment : Fragment() {
             val price = data.getStringExtra("price") ?: "-"
             val mileage = data.getStringExtra("mileage") ?: "-"
             val location = data.getStringExtra("location") ?: "-"
-            val imageUriString = data.getStringExtra("image_uri")
             val imageRes = data.getIntExtra("image_res", R.drawable.ic_car)
-
-            // If imageUriString available you may want to store it somewhere; adapter currently uses imageResId
-            val imageToUse = if (!imageUriString.isNullOrBlank()) imageRes else imageRes
 
             val newCar = Car(
                 id = id,
@@ -117,26 +117,29 @@ class SellFragment : Fragment() {
                 price = price,
                 mileage = mileage,
                 location = location,
-                imageResId = imageToUse,
+                imageResId = imageRes,
                 isWishlist = false,
                 isSold = false,
+                sellerName = "Anda",
+                sellerContact = "08123456789",
                 bodyType = "",
                 color = "",
                 transmission = "",
                 fuel = "",
                 kmRange = ""
             )
-            myCars.add(0, newCar) // insert at top
+
+            myCars.add(0, newCar)
             adapter.notifyItemInserted(0)
             binding.recyclerSellCars.scrollToPosition(0)
         }
     }
 
-    /**
-     * Dialog untuk memilih aksi pada mobil (Edit / Hapus / Tandai Sold)
-     */
     private fun showCarOptionsDialog(car: Car) {
-        val options = if (car.isSold) arrayOf("Lihat Detail") else arrayOf("Edit", "Hapus", "Tandai Sold Out")
+        val options = if (car.isSold)
+            arrayOf("Lihat Detail")
+        else
+            arrayOf("Edit", "Hapus", "Tandai Sold Out")
 
         AlertDialog.Builder(requireContext())
             .setTitle(car.name)
@@ -150,27 +153,19 @@ class SellFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Edit data mobil yang sudah ada
-     */
     private fun showEditCarDialog(car: Car) {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.activity_add_car, null)
+        val dialogView =
+            LayoutInflater.from(requireContext()).inflate(R.layout.activity_add_car, null)
 
-        // Ambil semua input field sesuai ID di XML
         val brand = dialogView.findViewById<EditText>(R.id.etBrand)
         val model = dialogView.findViewById<EditText>(R.id.etModel)
         val year = dialogView.findViewById<EditText>(R.id.etYear)
-        val tax = dialogView.findViewById<EditText>(R.id.etTax)
-        val color = dialogView.findViewById<EditText>(R.id.etColor)
         val mileage = dialogView.findViewById<EditText>(R.id.etMileage)
         val location = dialogView.findViewById<EditText>(R.id.etLocation)
-        val negatives = dialogView.findViewById<EditText>(R.id.etNegatives)
-        val mods = dialogView.findViewById<EditText>(R.id.etMods)
         val price = dialogView.findViewById<EditText>(R.id.etPrice)
 
-        // Isi data lama (yang udah ada di objek Car)
         brand.setText(car.brand)
-        model.setText(car.name.replace("${car.brand} ", "")) // asumsi name = "Brand Model"
+        model.setText(car.name.replace("${car.brand} ", ""))
         year.setText(car.year.toString())
         price.setText(car.price)
         mileage.setText(car.mileage)
@@ -180,15 +175,12 @@ class SellFragment : Fragment() {
             .setTitle("Edit Mobil")
             .setView(dialogView)
             .setPositiveButton("Simpan") { _, _ ->
-                // Simpan hasil edit ke dalam objek Car
                 car.brand = brand.text.toString()
                 car.name = "${brand.text} ${model.text}"
                 car.year = year.text.toString().toIntOrNull() ?: car.year
                 car.price = price.text.toString()
                 car.mileage = mileage.text.toString()
                 car.location = location.text.toString()
-                // Opsional: kalau mau tambahkan tax, color, dll. ke model Car, bisa tambahkan field baru di class-nya
-
                 adapter.notifyDataSetChanged()
                 Toast.makeText(requireContext(), "Data mobil diperbarui", Toast.LENGTH_SHORT).show()
             }
@@ -196,9 +188,6 @@ class SellFragment : Fragment() {
             .show()
     }
 
-    /**
-     * Hapus mobil dari daftar
-     */
     private fun deleteCar(car: Car) {
         val position = myCars.indexOf(car)
         if (position != -1) {
@@ -208,15 +197,8 @@ class SellFragment : Fragment() {
         }
     }
 
-    /**
-     * Tandai / hapus status Sold
-     */
     private fun toggleSoldStatus(car: Car) {
-        car.price = if (car.price.contains("SOLD", true)) {
-            car.price.replace(" - SOLD", "", true)
-        } else {
-            "${car.price} - SOLD"
-        }
+        car.isSold = !car.isSold
         adapter.notifyDataSetChanged()
         Toast.makeText(requireContext(), "Status mobil diperbarui", Toast.LENGTH_SHORT).show()
     }

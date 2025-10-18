@@ -11,6 +11,8 @@ data class Car(
     var imageResId: Int,
     var isWishlist: Boolean,
     var isSold: Boolean = false,
+    var sellerName: String,
+    var sellerContact: String,
     var bodyType: String = "",
     var color: String = "",
     var transmission: String = "",

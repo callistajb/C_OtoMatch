@@ -1,65 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:padding="16dp">
-
-<LinearLayout
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_height="match_parent"
+    android:background="#FAFAFA">
 
-    <ImageView
-        android:id="@+id/imgCarDetail"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop" />
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
 
-    <TextView
-        android:id="@+id/tvCarNameDetail"
-        android:textStyle="bold"
-        android:textSize="22sp"
-        android:layout_marginTop="16dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbarCarDetail"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@android:color/white"
+            app:title="Detail Mobil"
+            app:titleTextColor="@android:color/white" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-    <TextView
-        android:id="@+id/tvCarBrandDetail"
-        android:textSize="18sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/tvCarYearDetail"
-        android:layout_marginTop="4dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/tvCarPriceDetail"
-        android:textSize="20sp"
-        android:textColor="@color/green"
-        android:layout_marginTop="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/tvCarMileageDetail"
-        android:layout_marginTop="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/tvCarLocationDetail"
-        android:layout_marginTop="8dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/btnBack"
-        android:text="Kembali"
-        android:layout_marginTop="20dp"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Gambar mobil + badge harga -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="220dp">
+
+                <ImageView
+                    android:id="@+id/imgCarDetail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:background="#EEE"
+                    android:contentDescription="Gambar Mobil" />
+
+                <!-- Badge harga -->
+                <TextView
+                    android:id="@+id/tvCarPriceBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="12dp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:text="Rp 200.000.000"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:background="@drawable/price_badge_bg"
+                    android:textSize="16sp"
+                    android:layout_gravity="bottom|end" />
+            </FrameLayout>
+
+            <!-- Informasi umum -->
+            <TextView
+                android:id="@+id/tvCarNameDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nama Mobil"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/tvCarBrandDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Merek Mobil"
+                android:textSize="16sp"
+                android:textColor="#777" />
+
+            <TextView
+                android:id="@+id/tvCarYearDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tahun: 2020"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvCarLocationDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lokasi: Tangerang"
+                android:layout_marginTop="4dp" />
+
+            <!-- Spesifikasi -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="12dp"
+                android:background="#DDD" />
+
+            <TextView
+                android:id="@+id/tvVariantDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Varian: -"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvBodyDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipe: -"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvColorDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Warna: -"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvTransmissionDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Transmisi: -"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvFuelDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bahan Bakar: -"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvKmRangeDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Jarak Tempuh: -"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvCapacityDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kapasitas Mesin: -"
+                android:layout_marginTop="4dp" />
+
+            <!-- Info penjual -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="12dp"
+                android:background="#DDD" />
+
+            <TextView
+                android:id="@+id/tvSellerDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Penjual: Callista"
+                android:textStyle="bold"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tvContactDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kontak: 08123456789" />
+
+            <Button
+                android:id="@+id/btnContactSeller"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Hubungi Penjual" />
+
+
+            <!-- ==================== KOMENTAR & RATING ==================== -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="#CCC" />
+
+            <!-- Average Rating -->
+            <TextView
+                android:id="@+id/tvAvgRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rating rata-rata: -"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ulasan &amp; Rating"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Input komentar -->
+            <RatingBar
+                android:id="@+id/ratingBarInput"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="1.0"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etCommentInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tulis komentar kamu..."
+                android:background="@drawable/edittext_bg"
+                android:padding="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnSubmitComment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kirim Komentar" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvComments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>
-</ScrollView>

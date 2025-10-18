@@ -1,31 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FAFAFA"
     android:fitsSystemWindows="true"
     tools:context=".SellCarActivity">
 
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbarSellCar"
+    <!-- APP BAR -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:title="@string/title_sell_car"
-        android:titleTextColor="@color/white"
-        android:elevation="4dp"
+        android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
-        tools:ignore="HardcodedText" />
+        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
 
-    <!-- ScrollView biar konten bisa digulir -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbarSellCar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@android:color/white"
+            app:title="@string/title_sell_car"
+            app:titleTextColor="@android:color/white" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- ISI SCROLLABLE -->
     <ScrollView
         android:id="@+id/scroll"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:padding="16dp"
         android:clipToPadding="false">
 
@@ -35,7 +41,7 @@
             android:orientation="vertical"
             android:paddingBottom="80dp">
 
-            <!-- Preview Image -->
+            <!-- PREVIEW GAMBAR -->
             <ImageView
                 android:id="@+id/imgPreview"
                 android:layout_width="match_parent"
@@ -45,17 +51,14 @@
                 android:background="@drawable/bg_image_border"
                 android:contentDescription="@string/desc_preview_mobil" />
 
-            <!-- Tombol kamera & galeri -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                style="?android:attr/buttonBarStyle">
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnCamera"
-                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -63,7 +66,6 @@
 
                 <Button
                     android:id="@+id/btnGallery"
-                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -71,7 +73,19 @@
                     android:text="@string/btn_galeri" />
             </LinearLayout>
 
-            <!-- FORM -->
+            <!-- ===== FORM ===== -->
+            <EditText
+                android:id="@+id/etSellerName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nama Penjual" />
+
+            <EditText
+                android:id="@+id/etSellerType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tipe Penjual (Individu / Diler)" />
+
             <EditText
                 android:id="@+id/etBrand"
                 android:layout_width="match_parent"
@@ -85,6 +99,12 @@
                 android:hint="@string/hint_model" />
 
             <EditText
+                android:id="@+id/etVariant"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Varian (misal RS, Sport, dll)" />
+
+            <EditText
                 android:id="@+id/etYear"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -92,23 +112,42 @@
                 android:inputType="number" />
 
             <EditText
-                android:id="@+id/etTax"
+                android:id="@+id/etMileage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/hint_pajak" />
+                android:hint="Jarak Tempuh (km)"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/etFuelType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Bahan Bakar (Bensin / Diesel / Listrik)" />
+
+            <EditText
+                android:id="@+id/etTransmission"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Transmisi (Manual / Matic)" />
+
+            <EditText
+                android:id="@+id/etBodyType"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tipe Bodi (SUV, Sedan, Hatchback, dll)" />
+
+            <EditText
+                android:id="@+id/etCapacity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Kapasitas Mesin (cc)"
+                android:inputType="number" />
 
             <EditText
                 android:id="@+id/etColor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_warna" />
-
-            <EditText
-                android:id="@+id/etMileage"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/hint_km"
-                android:inputType="text" />
 
             <EditText
                 android:id="@+id/etLocation"
@@ -133,7 +172,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/hint_harga"
-                android:inputType="text" />
+                android:inputType="number" />
 
             <Button
                 android:id="@+id/btnGeneratePrice"

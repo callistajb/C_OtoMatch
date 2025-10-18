@@ -24,7 +24,6 @@ class ProfileFragment : Fragment() {
     private lateinit var btnLogout: Button
     private lateinit var ratingBar: RatingBar
     private lateinit var tvRatingValue: TextView
-    private lateinit var btnViewReviews: Button
 
     private var currentPhotoUri: Uri? = null
 
@@ -43,7 +42,6 @@ class ProfileFragment : Fragment() {
         btnLogout = v.findViewById(R.id.btnLogout)
         ratingBar = v.findViewById(R.id.ratingBar)
         tvRatingValue = v.findViewById(R.id.tvRatingValue)
-        btnViewReviews = v.findViewById(R.id.btnViewReviews)
 
         loadProfile()
 
@@ -55,10 +53,6 @@ class ProfileFragment : Fragment() {
         }
 
         btnLogout.setOnClickListener { showLogoutConfirmation() }
-
-        btnViewReviews.setOnClickListener {
-            Toast.makeText(requireContext(), "Halaman review belum diimplementasi", Toast.LENGTH_SHORT).show()
-        }
 
         return v
     }
