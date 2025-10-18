@@ -30,7 +30,7 @@
             android:id="@+id/inputName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name"
+            android:hint="Nama"
             android:inputType="textPersonName" />
 
         <EditText
@@ -62,14 +62,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Register" />
+            android:text="Daftar" />
 
         <TextView
             android:id="@+id/tvLogin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Already have an account? Log in"
+            android:text="Sudah punya akun? Masuk"
             android:textColor="@color/blue" />
     </LinearLayout>
 </ScrollView>
