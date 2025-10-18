@@ -189,12 +189,19 @@ class SellFragment : Fragment() {
     }
 
     private fun deleteCar(car: Car) {
-        val position = myCars.indexOf(car)
-        if (position != -1) {
-            myCars.removeAt(position)
-            adapter.notifyItemRemoved(position)
-            Toast.makeText(requireContext(), "Mobil dihapus", Toast.LENGTH_SHORT).show()
-        }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Hapus Mobil")
+            .setMessage("Apakah kamu yakin ingin menghapus mobil '${car.name}' dari daftar penjualan?")
+            .setPositiveButton("Hapus") { _, _ ->
+                val position = myCars.indexOf(car)
+                if (position != -1) {
+                    myCars.removeAt(position)
+                    adapter.notifyItemRemoved(position)
+                    Toast.makeText(requireContext(), "Mobil berhasil dihapus", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     private fun toggleSoldStatus(car: Car) {

@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import android.view.View
 import com.example.c_otomatch.fragments.*
 import com.example.c_otomatch.utils.Prefs
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -18,6 +19,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imgLogo: ImageView
     private lateinit var tvGreeting: TextView
     private lateinit var etSearch: EditText
+    private lateinit var imgSearchIcon: ImageView
+    private lateinit var searchBarLayout: View
     private var currentFragment: Fragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +31,8 @@ class MainActivity : AppCompatActivity() {
         imgLogo = findViewById(R.id.imgLogo)
         tvGreeting = findViewById(R.id.tvGreeting)
         etSearch = findViewById(R.id.etSearch)
+        imgSearchIcon = findViewById(R.id.imgSearchIcon)
+        searchBarLayout = findViewById(R.id.searchBarLayout)
 
         // Greeting dari SharedPreferences
         val userName = Prefs.getName(this)
@@ -55,6 +60,7 @@ class MainActivity : AppCompatActivity() {
 
         bottomNav.setOnItemReselectedListener { }
 
+        // Fitur pencarian
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -78,5 +84,15 @@ class MainActivity : AppCompatActivity() {
             )
             .replace(R.id.fragmentContainer, fragment)
             .commit()
+
+        if (fragment is ProfileFragment) {
+            etSearch.visibility = View.GONE
+            imgSearchIcon.visibility = View.GONE
+            searchBarLayout.visibility = View.GONE
+        } else {
+            etSearch.visibility = View.VISIBLE
+            imgSearchIcon.visibility = View.VISIBLE
+            searchBarLayout.visibility = View.VISIBLE
+        }
     }
 }

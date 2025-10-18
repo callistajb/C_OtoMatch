@@ -149,8 +149,6 @@ class SellCarActivity : AppCompatActivity() {
         val mileage = binding.etMileage.text.toString()
         val location = binding.etLocation.text.toString()
 
-        // For simplicity we pass back a resource id if we used fallback placeholder; if user picked an image uri
-        // we return URI string if available; SellFragment can decide how to use it.
         val result = Intent().apply {
             putExtra("id", id)
             putExtra("name", name)

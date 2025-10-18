@@ -40,6 +40,7 @@
 
         <!-- Search Bar -->
         <LinearLayout
+            android:id="@+id/searchBarLayout"
             android:layout_width="wrap_content"
             android:layout_height="42dp"
             android:background="@drawable/search_background"
@@ -48,6 +49,7 @@
             android:paddingHorizontal="12dp">
 
             <ImageView
+                android:id="@+id/imgSearchIcon"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_marginEnd="6dp"
