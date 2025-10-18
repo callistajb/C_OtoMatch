@@ -38,7 +38,7 @@ class HomeFragment : Fragment() {
         // ambil data asli (salinan mutable)
         carList = Data.carList.toMutableList()
 
-        adapter = CarAdapter(carList) { car ->
+        adapter = CarAdapter(carList, { car ->
             val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
                 putExtra("car_name", car.name)
                 putExtra("car_brand", car.brand)
@@ -56,7 +56,7 @@ class HomeFragment : Fragment() {
                 putExtra("km_range", car.kmRange)
             }
             startActivity(intent)
-        }
+        })
 
         recyclerView.adapter = adapter
 

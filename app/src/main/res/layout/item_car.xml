@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -7,62 +6,95 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="6dp">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
-
-        <ImageView
-            android:id="@+id/imgCar"
-            android:layout_width="100dp"
-            android:layout_height="80dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/civic"
-            android:contentDescription="Car image" />
+        android:layout_height="wrap_content">
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingStart="12dp">
+            android:orientation="horizontal"
+            android:padding="12dp">
 
-            <TextView
-                android:id="@+id/tvCarName"
-                android:fontFamily="@font/lato_regular"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Civic Turbo"
-                android:textStyle="bold"
-                android:textSize="16sp" />
+            <ImageView
+                android:id="@+id/imgCar"
+                android:layout_width="100dp"
+                android:layout_height="80dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/civic"
+                android:contentDescription="Car image" />
 
-            <TextView
-                android:id="@+id/tvCarBrand"
-                android:fontFamily="@font/lato_regular"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Honda"
-                android:textColor="#666" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingStart="12dp">
 
-            <TextView
-                android:id="@+id/tvCarPrice"
-                android:fontFamily="@font/lato_regular"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rp 420.000.000"
-                android:textColor="@color/red"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvCarName"
+                    android:fontFamily="@font/lato_regular"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Civic Turbo"
+                    android:textStyle="bold"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tvCarBrand"
+                    android:fontFamily="@font/lato_regular"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Honda"
+                    android:textColor="#666" />
+
+                <TextView
+                    android:id="@+id/tvCarPrice"
+                    android:fontFamily="@font/lato_regular"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rp 420.000.000"
+                    android:textColor="@color/red"
+                    android:textStyle="bold" />
+
+                <!-- Tombol SOLD -->
+                <TextView
+                    android:id="@+id/btnMarkSold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mark as SOLD"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="@color/red"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_sold_label" />
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnFavorite"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_wishlist_border"
+                android:tint="@color/accent_pink"
+                android:contentDescription="Favorite button" />
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/btnFavorite"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_wishlist_border"
-            android:tint="@color/accent_pink"
-            android:contentDescription="Favorite button" />
-
-    </LinearLayout>
-
+        <TextView
+            android:id="@+id/tvSoldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_sold_label"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:text="SOLD"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </FrameLayout>
 </androidx.cardview.widget.CardView>

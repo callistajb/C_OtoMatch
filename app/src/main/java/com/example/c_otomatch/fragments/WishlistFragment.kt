@@ -49,7 +49,11 @@ class WishlistFragment : Fragment() {
             tvEmpty.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
 
-            adapter = CarAdapter(wishlistCars) { /* nanti bisa tambahkan detail */ }
+            adapter = CarAdapter(
+                carList = wishlistCars,
+                onItemClicked = { car -> },
+                isSellFragment = false
+            )
             recyclerView.adapter = adapter
         }
     }

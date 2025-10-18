@@ -35,7 +35,6 @@ class SellFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Data dummy awal mobil yang dijual oleh pengguna
         myCars.addAll(
             listOf(
                 Car(
@@ -79,9 +78,7 @@ class SellFragment : Fragment() {
             )
         )
 
-        adapter = CarAdapter(myCars) { car ->
-            showCarOptionsDialog(car)
-        }
+        adapter = CarAdapter(myCars, { car -> showCarOptionsDialog(car) }, isSellFragment = true)
 
         binding.recyclerSellCars.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerSellCars.adapter = adapter
@@ -189,19 +186,12 @@ class SellFragment : Fragment() {
     }
 
     private fun deleteCar(car: Car) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Hapus Mobil")
-            .setMessage("Apakah kamu yakin ingin menghapus mobil '${car.name}' dari daftar penjualan?")
-            .setPositiveButton("Hapus") { _, _ ->
-                val position = myCars.indexOf(car)
-                if (position != -1) {
-                    myCars.removeAt(position)
-                    adapter.notifyItemRemoved(position)
-                    Toast.makeText(requireContext(), "Mobil berhasil dihapus", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+        val position = myCars.indexOf(car)
+        if (position != -1) {
+            myCars.removeAt(position)
+            adapter.notifyItemRemoved(position)
+            Toast.makeText(requireContext(), "Mobil dihapus", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun toggleSoldStatus(car: Car) {
