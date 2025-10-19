@@ -1,6 +1,7 @@
 package com.example.c_otomatch.fragments
 
 import android.os.Bundle
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.c_otomatch.CarDetailActivity
 import com.example.c_otomatch.R
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.utils.Data
@@ -51,7 +53,25 @@ class WishlistFragment : Fragment() {
 
             adapter = CarAdapter(
                 carList = wishlistCars,
-                onItemClicked = { car -> },
+                onItemClicked = { car ->
+                    val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
+                        putExtra("car_name", car.name)
+                        putExtra("car_brand", car.brand)
+                        putExtra("car_year", car.year)
+                        putExtra("car_price", car.price)
+                        putExtra("car_mileage", car.mileage)
+                        putExtra("car_location", car.location)
+                        putExtra("car_image", car.imageResId)
+                        putExtra("seller_name", car.sellerName)
+                        putExtra("seller_contact", car.sellerContact)
+                        putExtra("body_type", car.bodyType)
+                        putExtra("color", car.color)
+                        putExtra("transmission", car.transmission)
+                        putExtra("fuel", car.fuel)
+                        putExtra("km_range", car.kmRange)
+                    }
+                    startActivity(intent)
+                },
                 isSellFragment = false
             )
             recyclerView.adapter = adapter
