@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "300190585293",
+    "project_id": "c-otomatch",
+    "storage_bucket": "c-otomatch.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:300190585293:android:dfe28e58819624dc023484",
+        "android_client_info": {
+          "package_name": "com.example.c_otomatch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXewmzhLyGKCMOTwWvh_4ZhavZcstAIY4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

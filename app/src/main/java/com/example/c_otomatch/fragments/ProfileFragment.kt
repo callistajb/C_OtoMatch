@@ -4,14 +4,19 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide // IMPORT GLIDE
 import com.example.c_otomatch.LoginActivity
 import com.example.c_otomatch.R
-import com.example.c_otomatch.utils.Prefs
+// HAPUS Prefs
+// import com.example.c_otomatch.utils.Prefs
+import com.google.firebase.auth.FirebaseAuth // IMPORT AUTH
+import com.google.firebase.firestore.FirebaseFirestore // IMPORT FIRESTORE
 
 class ProfileFragment : Fragment() {
 
@@ -25,13 +30,17 @@ class ProfileFragment : Fragment() {
     private lateinit var ratingBar: RatingBar
     private lateinit var tvRatingValue: TextView
 
-    private var currentPhotoUri: Uri? = null
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         val v = inflater.inflate(R.layout.fragment_profile, container, false)
+
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         ivProfile = v.findViewById(R.id.ivProfile)
         tvName = v.findViewById(R.id.tvName)
@@ -57,23 +66,49 @@ class ProfileFragment : Fragment() {
         return v
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadProfile()
+    }
+
     private fun loadProfile() {
-        tvName.text = Prefs.getName(requireContext())
-        tvUsername.text = Prefs.getEmail(requireContext())
-        tvPhone.text = Prefs.getPhone(requireContext())
-        tvLocation.text = Prefs.getLocation(requireContext())
-
-        val rating = Prefs.getRating(requireContext())
-        ratingBar.rating = rating.toFloat()
-        tvRatingValue.text = String.format("%.1f ★", rating)
-
-        Prefs.getProfileImageUri(requireContext())?.let {
-            try {
-                val uri = Uri.parse(it)
-                currentPhotoUri = uri
-                ivProfile.setImageURI(uri)
-            } catch (_: Exception) {}
+        val user = auth.currentUser
+        if (user == null) {
+            goToLogin()
+            return
         }
+
+        db.collection("users").document(user.uid).get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    tvName.text = document.getString("name") ?: "Nama Belum Diatur"
+                    tvUsername.text = document.getString("email") ?: user.email
+                    tvPhone.text = document.getString("phone") ?: "No. HP Belum Diatur"
+                    tvLocation.text = document.getString("location") ?: "Lokasi Belum Diatur"
+
+                    val rating = document.getDouble("rating")?.toFloat() ?: 4.7f
+                    ratingBar.rating = rating
+                    tvRatingValue.text = String.format("%.1f ★", rating)
+
+                    val imageUrl = document.getString("profileImageUrl")
+                    if (!imageUrl.isNullOrEmpty()) {
+                        Glide.with(this)
+                            .load(imageUrl)
+                            .placeholder(R.drawable.ic_person)
+                            .circleCrop()
+                            .into(ivProfile)
+                    } else {
+                        ivProfile.setImageResource(R.drawable.ic_person)
+                    }
+
+                } else {
+                    Log.w("ProfileFragment", "No such document")
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w("ProfileFragment", "get failed with ", exception)
+                Toast.makeText(context, "Gagal memuat profil", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun showLogoutConfirmation() {
@@ -81,12 +116,18 @@ class ProfileFragment : Fragment() {
             .setTitle("Konfirmasi Logout")
             .setMessage("Apakah Anda yakin ingin keluar dari akun ini?")
             .setPositiveButton("Ya") { _, _ ->
-                Prefs.logout(requireContext())
-                val intent = Intent(requireContext(), LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                // Logout dari Firebase Auth
+                auth.signOut()
+
+                goToLogin()
             }
             .setNegativeButton("Batal", null)
             .show()
+    }
+
+    private fun goToLogin() {
+        val intent = Intent(requireContext(), LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
     }
 }

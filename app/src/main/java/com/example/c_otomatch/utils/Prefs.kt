@@ -7,7 +7,6 @@ object Prefs {
 
     private const val PREFS_NAME = "otomatch_prefs"
 
-    // Key untuk data user
     private const val KEY_IS_LOGGED = "is_logged"
     private const val KEY_NAME = "user_name"
     private const val KEY_EMAIL = "user_email"
@@ -20,7 +19,6 @@ object Prefs {
     private fun prefs(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /** --- LOGIN STATUS --- */
     fun setLoggedIn(ctx: Context, name: String, email: String? = null) {
         prefs(ctx).edit()
             .putBoolean(KEY_IS_LOGGED, true)
@@ -35,7 +33,6 @@ object Prefs {
 
     fun isLoggedIn(ctx: Context) = prefs(ctx).getBoolean(KEY_IS_LOGGED, false)
 
-    /** --- BASIC USER INFO --- */
     fun getName(ctx: Context) = prefs(ctx).getString(KEY_NAME, "") ?: ""
     fun setName(ctx: Context, value: String) = prefs(ctx).edit().putString(KEY_NAME, value).apply()
 
@@ -56,11 +53,9 @@ object Prefs {
     fun setProfileImageUri(ctx: Context, value: String) =
         prefs(ctx).edit().putString(KEY_PROFILE_URI, value).apply()
 
-    /** --- PASSWORD --- */
     fun getPassword(ctx: Context) = prefs(ctx).getString(KEY_PASSWORD, "") ?: ""
     fun setPassword(ctx: Context, value: String) = prefs(ctx).edit().putString(KEY_PASSWORD, value).apply()
 
-    /** --- RATING --- */
     fun getRating(ctx: Context): Float = prefs(ctx).getFloat(KEY_RATING, 4.7f) // default rating
     fun setRating(ctx: Context, value: Float) = prefs(ctx).edit().putFloat(KEY_RATING, value).apply()
 }

@@ -1,7 +1,8 @@
 package com.example.c_otomatch.models
 
 data class Comment(
-    val userName: String,
-    val text: String,
-    val rating: Float
+    val userName: String = "",
+    val text: String = "",
+    val rating: Float = 0f,
+    val userId: String = ""
 )

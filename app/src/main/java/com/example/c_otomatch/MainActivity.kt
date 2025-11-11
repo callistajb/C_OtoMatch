@@ -1,5 +1,9 @@
 package com.example.c_otomatch
 
+import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.auth.FirebaseAuth
+import android.util.Log
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -10,8 +14,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import android.view.View
 import com.example.c_otomatch.fragments.*
-import com.example.c_otomatch.utils.Prefs
+// HAPUS Prefs
+// import com.example.c_otomatch.utils.Prefs
+import com.example.c_otomatch.utils.Data // Anda masih pakai ini untuk Uploader
+import com.example.c_otomatch.utils.FirestoreUploader // Pastikan ini ada
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.firestore.FirebaseFirestore // IMPORT FIRESTORE
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,9 +31,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchBarLayout: View
     private var currentFragment: Fragment? = null
 
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Inisialisasi Firebase
+        FirebaseApp.initializeApp(this)
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
+        val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
 
         bottomNav = findViewById(R.id.bottomNavigation)
         imgLogo = findViewById(R.id.imgLogo)
@@ -34,20 +51,34 @@ class MainActivity : AppCompatActivity() {
         imgSearchIcon = findViewById(R.id.imgSearchIcon)
         searchBarLayout = findViewById(R.id.searchBarLayout)
 
-        // Greeting dari SharedPreferences
-        val userName = Prefs.getName(this)
-        tvGreeting.text = if (!userName.isNullOrEmpty()) "Hi, $userName" else "Hi, Selamat datang!"
+        val firebaseUser = auth.currentUser
+        if (firebaseUser != null) {
+            // Ambil data dari Firestore
+            db.collection("users").document(firebaseUser.uid).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        val userName = document.getString("name")
+                        tvGreeting.text = if (!userName.isNullOrEmpty()) "Hi, $userName" else "Hi, User"
+                    } else {
+                        // Jika dokumen tidak ada, gunakan email
+                        tvGreeting.text = "Hi, ${firebaseUser.email?.split('@')?.get(0) ?: "User"}"
+                    }
+                }
+                .addOnFailureListener {
+                    tvGreeting.text = "Hi, Selamat datang!"
+                }
+        } else {
+            // Seharusnya ga ada kalo SplashActivity benar
+            tvGreeting.text = "Hi, Selamat datang!"
+        }
 
-        // Klik logo → kembali ke Home
         imgLogo.setOnClickListener {
             bottomNav.selectedItemId = R.id.nav_home
             loadFragment(HomeFragment())
         }
 
-        // Load default fragment
         loadFragment(HomeFragment())
 
-        // Bottom Navigation
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> loadFragment(HomeFragment())
@@ -60,7 +91,6 @@ class MainActivity : AppCompatActivity() {
 
         bottomNav.setOnItemReselectedListener { }
 
-        // Fitur pencarian
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {

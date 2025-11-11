@@ -6,32 +6,35 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.example.c_otomatch.databinding.ActivitySplashBinding
-import com.example.c_otomatch.utils.Prefs
+import com.google.firebase.auth.FirebaseAuth
 
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySplashBinding
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // play a small fade/scale animation on logo (use view animation resources)
+        auth = FirebaseAuth.getInstance()
+
         binding.logoImage.startAnimation(
             android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in)
         )
 
-        // delay then navigate
         Handler(Looper.getMainLooper()).postDelayed({
-            val target = if (Prefs.isLoggedIn(this)) {
-                Intent(this, MainActivity::class.java)
+            val target: Intent
+            if (auth.currentUser != null) {
+                target = Intent(this, MainActivity::class.java)
             } else {
-                Intent(this, LoginActivity::class.java)
+                target = Intent(this, LoginActivity::class.java)
             }
+
             startActivity(target)
             overridePendingTransition(R.anim.slide_up, R.anim.slide_out_up)
             finish()
-        }, 1200) // 1.2s splash
+        }, 1200)
     }
 }

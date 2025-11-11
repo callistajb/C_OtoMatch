@@ -8,10 +8,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.c_otomatch.R
 import com.example.c_otomatch.models.Car
 import com.google.android.material.snackbar.Snackbar
 import java.text.NumberFormat
+import android.util.Log
 import java.util.*
 
 class CarAdapter(
@@ -39,53 +41,87 @@ class CarAdapter(
     override fun onBindViewHolder(holder: CarViewHolder, position: Int) {
         val car = carList[position]
 
-        // --- Set data dasar ---
-        holder.imgCar.setImageResource(car.imageResId)
+        Glide.with(holder.itemView.context)
+            .load(car.imageUrl) // dari URL
+            .placeholder(R.drawable.ic_car) // Gambar default saat loading
+            .error(R.drawable.ic_car) // Gambar default kalo error
+            .into(holder.imgCar)
+
         holder.tvCarName.text = car.name
         holder.tvCarBrand.text = car.brand
         holder.tvCarPrice.text = formatPrice(car.price)
 
-        // --- Wishlist button ---
         holder.btnFavorite.setImageResource(
             if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
         )
 
         holder.btnFavorite.setOnClickListener {
+            // Inisialisasi Firebase Auth & DB
+            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            val user = auth.currentUser
+
+            if (user == null) {
+                Toast.makeText(holder.itemView.context, "Anda harus login untuk menambah wishlist", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             animateButton(holder.btnFavorite)
+
             car.isWishlist = !car.isWishlist
             holder.btnFavorite.setImageResource(
                 if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
             )
-            Toast.makeText(
-                holder.itemView.context,
-                if (car.isWishlist) "Ditambahkan ke wishlist" else "Dihapus dari wishlist",
-                Toast.LENGTH_SHORT
-            ).show()
+
+            val userDocRef = db.collection("users").document(user.uid)
+            val carId = car.documentId
+
+            if (carId.isBlank()) {
+                Log.e("CarAdapter", "Car documentId is blank. Cannot update wishlist.")
+                return@setOnClickListener
+            }
+
+            // Update data di Firestore
+            if (car.isWishlist) {
+                // Jika ditambah ke wishlist -> tambahkan ID mobil ke array 'wishlist'
+                userDocRef.update("wishlist", com.google.firebase.firestore.FieldValue.arrayUnion(carId))
+                    .addOnSuccessListener {
+                        Toast.makeText(holder.itemView.context, "Ditambahkan ke wishlist", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("CarAdapter", "Error adding to wishlist", e)
+                        car.isWishlist = false
+                        holder.btnFavorite.setImageResource(R.drawable.ic_wishlist_border)
+                    }
+            } else {
+                // Jika dihapus dari wishlist -> hapus ID mobil dari array 'wishlist'
+                userDocRef.update("wishlist", com.google.firebase.firestore.FieldValue.arrayRemove(carId))
+                    .addOnSuccessListener {
+                        Toast.makeText(holder.itemView.context, "Dihapus dari wishlist", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("CarAdapter", "Error removing from wishlist", e)
+                        car.isWishlist = true
+                        holder.btnFavorite.setImageResource(R.drawable.ic_wishlist)
+                    }
+            }
         }
 
-        // --- Label SOLD ---
         holder.tvSoldLabel.visibility = if (car.isSold) View.VISIBLE else View.GONE
-
-        // --- Klik item (buka detail / action lain) ---
         holder.itemView.setOnClickListener { onItemClicked(car) }
 
-        // --- Tombol "Mark as SOLD" hanya muncul di SellFragment ---
         if (isSellFragment) {
             holder.btnMarkSold.visibility = View.VISIBLE
             holder.btnMarkSold.text = if (car.isSold) "SOLD" else "Mark as SOLD"
             holder.btnMarkSold.alpha = if (car.isSold) 0.6f else 1f
 
             holder.btnMarkSold.setOnClickListener {
-                car.isSold = !car.isSold // toggle
+                car.isSold = !car.isSold
 
-                // ubah tampilan sesuai status
                 holder.btnMarkSold.text = if (car.isSold) "SOLD" else "Mark as SOLD"
                 holder.btnMarkSold.alpha = if (car.isSold) 0.6f else 1f
-
-                // label “SOLD” di pojok kanan atas
                 holder.tvSoldLabel.visibility = if (car.isSold) View.VISIBLE else View.GONE
 
-                // tampilkan feedback Snackbar
                 Snackbar.make(
                     holder.itemView,
                     if (car.isSold)
@@ -95,11 +131,9 @@ class CarAdapter(
                     Snackbar.LENGTH_SHORT
                 ).show()
 
-                // refresh tampilan item (tanpa disable klik)
                 notifyItemChanged(position)
             }
         } else {
-            // Selain SellFragment, tombol ini disembunyikan
             holder.btnMarkSold.visibility = View.GONE
         }
     }

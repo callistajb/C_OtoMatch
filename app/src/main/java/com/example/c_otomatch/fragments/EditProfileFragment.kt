@@ -1,11 +1,13 @@
 package com.example.c_otomatch.fragments
 
 import android.Manifest
+import android.app.ProgressDialog
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,10 +17,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import com.example.c_otomatch.R
-import com.example.c_otomatch.utils.Prefs
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
 class EditProfileFragment : Fragment() {
 
@@ -32,7 +40,14 @@ class EditProfileFragment : Fragment() {
     private lateinit var btnUseMyLocation: Button
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    private var currentPhotoUri: Uri? = null
+    private var currentPhotoUri: Uri? = null // Uri baru yang dipilih
+    private var existingPhotoUrl: String? = null // URL foto lama dari Firestore
+
+    // Firebase
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
+    private lateinit var storage: FirebaseStorage
+    private lateinit var progressDialog: ProgressDialog
 
     // Gallery picker
     private val pickImageLauncher = registerForActivityResult(
@@ -91,10 +106,21 @@ class EditProfileFragment : Fragment() {
         }
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val v = inflater.inflate(R.layout.fragment_edit_profile, container, false)
+
+        // Inisialisasi Firebase
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
+        storage = FirebaseStorage.getInstance()
+
+        progressDialog = ProgressDialog(requireContext()).apply {
+            setTitle("Menyimpan...")
+            setCancelable(false)
+        }
 
         ivProfile = v.findViewById(R.id.ivProfile)
         etName = v.findViewById(R.id.etName)
@@ -107,13 +133,12 @@ class EditProfileFragment : Fragment() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        loadProfile()
+        loadProfile() // Load data dari Firestore
 
         ivProfile.setOnClickListener { showPhotoChooser() }
         btnChangePassword.setOnClickListener { showChangePasswordDialog() }
         btnSaveProfile.setOnClickListener {
-            saveProfile()
-            parentFragmentManager.popBackStack()
+            saveProfile() // Simpan data ke Firestore/Storage
         }
         btnUseMyLocation.setOnClickListener {
             requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -123,18 +148,28 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun loadProfile() {
-        etName.setText(Prefs.getName(requireContext()))
-        etUsername.setText(Prefs.getEmail(requireContext()))
-        etPhone.setText(Prefs.getPhone(requireContext()))
-        etLocation.setText(Prefs.getLocation(requireContext()))
+        val user = auth.currentUser ?: return
 
-        Prefs.getProfileImageUri(requireContext())?.let {
-            try {
-                val uri = Uri.parse(it)
-                currentPhotoUri = uri
-                ivProfile.setImageURI(uri)
-            } catch (_: Exception) {}
-        }
+        // Ambil data dari Firestore
+        db.collection("users").document(user.uid).get()
+            .addOnSuccessListener { doc ->
+                if (doc != null && doc.exists()) {
+                    etName.setText(doc.getString("name"))
+                    etUsername.setText(doc.getString("email")) // Email ga bisa diubah dari sini
+                    etUsername.isEnabled = false // Matikan edit email
+                    etPhone.setText(doc.getString("phone"))
+                    etLocation.setText(doc.getString("location"))
+
+                    existingPhotoUrl = doc.getString("profileImageUrl")
+                    if (!existingPhotoUrl.isNullOrEmpty()) {
+                        Glide.with(this)
+                            .load(existingPhotoUrl)
+                            .placeholder(R.drawable.ic_person)
+                            .circleCrop()
+                            .into(ivProfile)
+                    }
+                }
+            }
     }
 
     private fun showPhotoChooser() {
@@ -197,26 +232,74 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun saveProfile() {
+        val user = auth.currentUser
+        if (user == null) {
+            Toast.makeText(requireContext(), "User tidak ditemukan", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        progressDialog.show()
+
+        if (currentPhotoUri != null) {
+            val storageRef = storage.reference.child("profile_images/${user.uid}.jpg")
+            storageRef.putFile(currentPhotoUri!!)
+                .addOnSuccessListener {
+                    storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                        updateUserDocument(user.uid, downloadUrl.toString())
+                    }
+                }
+                .addOnFailureListener { e ->
+                    progressDialog.dismiss()
+                    Toast.makeText(requireContext(), "Gagal upload foto: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+        } else {
+            updateUserDocument(user.uid, existingPhotoUrl) // Gunakan URL foto lama
+        }
+    }
+
+    private fun updateUserDocument(uid: String, imageUrl: String?) {
         val name = etName.text.toString().trim()
-        val username = etUsername.text.toString().trim()
         val phone = etPhone.text.toString().trim()
         val location = etLocation.text.toString().trim()
 
         if (name.isBlank()) {
             etName.error = "Nama wajib diisi"
+            progressDialog.dismiss()
             return
         }
 
-        Prefs.setName(requireContext(), name)
-        Prefs.setEmail(requireContext(), username)
-        Prefs.setPhone(requireContext(), phone)
-        Prefs.setLocation(requireContext(), location)
-        currentPhotoUri?.let { Prefs.setProfileImageUri(requireContext(), it.toString()) }
+        val userDataUpdates = hashMapOf<String, Any>(
+            "name" to name,
+            "phone" to phone,
+            "location" to location
+        )
 
-        Toast.makeText(requireContext(), "Profil diperbarui", Toast.LENGTH_SHORT).show()
+        if (imageUrl != null) {
+            userDataUpdates["profileImageUrl"] = imageUrl
+        }
+
+        // Update ke Firestore
+        db.collection("users").document(uid)
+            .update(userDataUpdates)
+            .addOnSuccessListener {
+                progressDialog.dismiss()
+                Toast.makeText(requireContext(), "Profil diperbarui", Toast.LENGTH_SHORT).show()
+                // Update juga nama di Auth
+                val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(name).build()
+                auth.currentUser?.updateProfile(profileUpdates)
+
+                parentFragmentManager.popBackStack()
+            }
+            .addOnFailureListener { e ->
+                progressDialog.dismiss()
+                Toast.makeText(requireContext(), "Gagal simpan profil: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
+
     private fun showChangePasswordDialog() {
+        val user = auth.currentUser ?: return
+
         val view = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_change_password, null)
         val etOld = view.findViewById<EditText>(R.id.etOldPassword)
@@ -231,9 +314,8 @@ class EditProfileFragment : Fragment() {
                 val nw = etNew.text.toString()
                 val c = etConfirm.text.toString()
 
-                val stored = Prefs.getPassword(requireContext())
-                if (stored.isNotBlank() && old != stored) {
-                    Toast.makeText(requireContext(), "Password lama salah", Toast.LENGTH_SHORT).show()
+                if (old.isEmpty() || nw.isEmpty() || c.isEmpty()) {
+                    Toast.makeText(requireContext(), "Semua field wajib diisi", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 if (nw.length < 6) {
@@ -244,8 +326,26 @@ class EditProfileFragment : Fragment() {
                     Toast.makeText(requireContext(), "Konfirmasi password tidak cocok", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                Prefs.setPassword(requireContext(), nw)
-                Toast.makeText(requireContext(), "Password diubah", Toast.LENGTH_SHORT).show()
+
+                // Re-autentikasi user sebelum ganti password
+                val credential = EmailAuthProvider.getCredential(user.email!!, old)
+                user.reauthenticate(credential)
+                    .addOnSuccessListener {
+                        user.updatePassword(nw)
+                            .addOnSuccessListener {
+                                Toast.makeText(requireContext(), "Password berhasil diubah", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(requireContext(), "Gagal ubah password: ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                    .addOnFailureListener {
+                        if (it is FirebaseAuthInvalidCredentialsException) {
+                            Toast.makeText(requireContext(), "Password lama salah", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
             }
             .setNegativeButton("Batal", null)
             .show()

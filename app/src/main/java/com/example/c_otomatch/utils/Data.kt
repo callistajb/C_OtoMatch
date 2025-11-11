@@ -1,6 +1,5 @@
 package com.example.c_otomatch.utils
 
-import com.example.c_otomatch.R
 import com.example.c_otomatch.models.Car
 
 object Data {
@@ -13,7 +12,7 @@ object Data {
             price = "Rp 420.000.000",
             mileage = "20.000 km",
             location = "Tangerang",
-            imageResId = R.drawable.civic,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Civic+Turbo",
             isWishlist = false,
             isSold = false,
             sellerName = "Callista Jasmine",
@@ -32,7 +31,7 @@ object Data {
             price = "Rp 520.000.000",
             mileage = "35.000 km",
             location = "Jakarta",
-            imageResId = R.drawable.fortuner,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Fortuner+VRZ", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Callista Jasmine",
@@ -51,7 +50,7 @@ object Data {
             price = "Rp 250.000.000",
             mileage = "40.000 km",
             location = "Bekasi",
-            imageResId = R.drawable.xpander,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Xpander", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Budi Santoso",
@@ -70,7 +69,7 @@ object Data {
             price = "Rp 480.000.000",
             mileage = "10.000 km",
             location = "BSD City",
-            imageResId = R.drawable.mazda3,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Mazda+3", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Andi Wijaya",
@@ -89,7 +88,7 @@ object Data {
             price = "Rp 1.200.000.000",
             mileage = "5.000 km",
             location = "Jakarta Selatan",
-            imageResId = R.drawable.tesla_model3,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Tesla+Model+3", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Kevin Lim",
@@ -108,7 +107,7 @@ object Data {
             price = "Rp 1.600.000.000",
             mileage = "25.000 km",
             location = "Jakarta Barat",
-            imageResId = R.drawable.bmw_x5,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=BMW+X5", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Jonathan",
@@ -127,7 +126,7 @@ object Data {
             price = "Rp 1.250.000.000",
             mileage = "30.000 km",
             location = "Jakarta Utara",
-            imageResId = R.drawable.mercedes_e200,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Mercy+E200", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Agus Setiawan",
@@ -146,7 +145,7 @@ object Data {
             price = "Rp 1.000.000.000",
             mileage = "60.000 km",
             location = "Bandung",
-            imageResId = R.drawable.jeep_rubicon,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Rubicon", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Rina Oktaviani",
@@ -165,7 +164,7 @@ object Data {
             price = "Rp 180.000.000",
             mileage = "120.000 km",
             location = "Yogyakarta",
-            imageResId = R.drawable.vw_beetle,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=VW+Beetle", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Hendra Gunawan",
@@ -184,7 +183,7 @@ object Data {
             price = "Rp 420.000.000",
             mileage = "8.000 km",
             location = "Tangerang Selatan",
-            imageResId = R.drawable.jimny,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Jimny", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Dewi Anggraini",
@@ -203,7 +202,7 @@ object Data {
             price = "Rp 850.000.000",
             mileage = "3.000 km",
             location = "BSD City",
-            imageResId = R.drawable.ioniq5,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Ioniq+5", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Tania Widjaja",
@@ -222,7 +221,7 @@ object Data {
             price = "Rp 65.000.000",
             mileage = "180.000 km",
             location = "Cirebon",
-            imageResId = R.drawable.kijang_super,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Kijang+Super", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Slamet Riyadi",
@@ -241,7 +240,7 @@ object Data {
             price = "Rp 1.750.000.000",
             mileage = "12.000 km",
             location = "Jakarta Pusat",
-            imageResId = R.drawable.evoque,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Evoque", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "William Tanuwijaya",
@@ -260,7 +259,7 @@ object Data {
             price = "Rp 135.000.000",
             mileage = "25.000 km",
             location = "Serpong",
-            imageResId = R.drawable.ayla,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Ayla", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Riko Santoso",
@@ -279,7 +278,7 @@ object Data {
             price = "Rp 700.000.000",
             mileage = "6.000 km",
             location = "Jakarta Selatan",
-            imageResId = R.drawable.nissan_leaf,
+            imageUrl = "https://placehold.co/600x400/555555/FFFFFF/png?text=Nissan+Leaf", // GANTI
             isWishlist = false,
             isSold = false,
             sellerName = "Angga Saputra",

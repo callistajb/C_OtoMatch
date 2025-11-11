@@ -12,6 +12,7 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
+    // settings.gradle.ktsdependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()

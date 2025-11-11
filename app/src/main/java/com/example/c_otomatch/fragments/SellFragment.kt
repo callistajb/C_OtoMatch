@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,13 +17,22 @@ import com.example.c_otomatch.SellCarActivity
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.databinding.FragmentSellBinding
 import com.example.c_otomatch.models.Car
+// IMPORT FIREBASE
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query // Untuk sorting
 
 class SellFragment : Fragment() {
 
     private var _binding: FragmentSellBinding? = null
     private val binding get() = _binding!!
-    private val myCars = mutableListOf<Car>()
+
+    private val myCarsList = mutableListOf<Car>()
     private lateinit var adapter: CarAdapter
+
+    // Firebase
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,108 +45,72 @@ class SellFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        myCars.addAll(
-            listOf(
-                Car(
-                    id = 1,
-                    name = "Civic Turbo",
-                    brand = "Honda",
-                    year = 2021,
-                    price = "Rp 420.000.000",
-                    mileage = "20.000 km",
-                    location = "Tangerang",
-                    imageResId = R.drawable.civic,
-                    isWishlist = false,
-                    isSold = false,
-                    sellerName = "Anda",
-                    sellerContact = "08123456789",
-                    bodyType = "Sedan",
-                    color = "Hitam",
-                    transmission = "Automatic",
-                    fuel = "Bensin",
-                    kmRange = "<50.000 km"
-                ),
-                Car(
-                    id = 2,
-                    name = "Fortuner VRZ",
-                    brand = "Toyota",
-                    year = 2020,
-                    price = "Rp 520.000.000",
-                    mileage = "35.000 km",
-                    location = "Jakarta",
-                    imageResId = R.drawable.fortuner,
-                    isWishlist = false,
-                    isSold = false,
-                    sellerName = "Anda",
-                    sellerContact = "08123456789",
-                    bodyType = "SUV",
-                    color = "Putih",
-                    transmission = "Automatic",
-                    fuel = "Diesel",
-                    kmRange = "50.000-100.000 km"
-                )
-            )
-        )
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
-        adapter = CarAdapter(myCars, { car -> showCarOptionsDialog(car) }, isSellFragment = true)
+        adapter = CarAdapter(myCarsList, { car -> showCarOptionsDialog(car) }, isSellFragment = true)
 
         binding.recyclerSellCars.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerSellCars.adapter = adapter
 
-        // Tombol tambah mobil baru
         binding.fabAddCar.setOnClickListener {
             val intent = Intent(requireContext(), SellCarActivity::class.java)
-            intent.putExtra("next_id", myCars.size + 1)
             addCarLauncher.launch(intent)
         }
+
+        loadMyCars()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadMyCars()
+    }
+
+    private fun loadMyCars() {
+        val user = auth.currentUser
+        if (user == null) {
+            Toast.makeText(context, "Anda harus login untuk melihat mobil Anda", Toast.LENGTH_SHORT).show()
+            myCarsList.clear()
+            adapter.notifyDataSetChanged()
+            return
+        }
+
+        db.collection("cars")
+            .whereEqualTo("sellerUid", user.uid)
+            .get()
+            .addOnSuccessListener { result ->
+                myCarsList.clear()
+                for (document in result) {
+                    try {
+                        val car = document.toObject(Car::class.java)
+                        car.documentId = document.id
+                        myCarsList.add(car)
+                    } catch (e: Exception) {
+                        Log.e("SellFragment", "Error converting car", e)
+                    }
+                }
+                adapter.updateList(myCarsList)
+            }
+            .addOnFailureListener { e ->
+                Log.e("SellFragment", "Error fetching cars", e)
+                Toast.makeText(context, "Gagal memuat data", Toast.LENGTH_SHORT).show()
+            }
     }
 
     // Launcher untuk menerima data dari SellCarActivity
     private val addCarLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-            val data = result.data!!
-            val id = data.getIntExtra("id", myCars.size + 1)
-            val name = data.getStringExtra("name") ?: "Unknown"
-            val brand = data.getStringExtra("brand") ?: ""
-            val year = data.getIntExtra("year", 2020)
-            val price = data.getStringExtra("price") ?: "-"
-            val mileage = data.getStringExtra("mileage") ?: "-"
-            val location = data.getStringExtra("location") ?: "-"
-            val imageRes = data.getIntExtra("image_res", R.drawable.ic_car)
-
-            val newCar = Car(
-                id = id,
-                name = name,
-                brand = brand,
-                year = year,
-                price = price,
-                mileage = mileage,
-                location = location,
-                imageResId = imageRes,
-                isWishlist = false,
-                isSold = false,
-                sellerName = "Anda",
-                sellerContact = "08123456789",
-                bodyType = "",
-                color = "",
-                transmission = "",
-                fuel = "",
-                kmRange = ""
-            )
-
-            myCars.add(0, newCar)
-            adapter.notifyItemInserted(0)
-            binding.recyclerSellCars.scrollToPosition(0)
+        if (result.resultCode == Activity.RESULT_OK) {
+            Log.d("SellFragment", "New car added, onResume will refresh.")
         }
     }
 
     private fun showCarOptionsDialog(car: Car) {
         val options = if (car.isSold)
-            arrayOf("Lihat Detail")
+            arrayOf("Edit", "Hapus", "Tandai TERSEDIA")
         else
-            arrayOf("Edit", "Hapus", "Tandai Sold Out")
+            arrayOf("Edit", "Hapus", "Tandai SOLD OUT")
 
         AlertDialog.Builder(requireContext())
             .setTitle(car.name)
@@ -172,14 +146,25 @@ class SellFragment : Fragment() {
             .setTitle("Edit Mobil")
             .setView(dialogView)
             .setPositiveButton("Simpan") { _, _ ->
-                car.brand = brand.text.toString()
-                car.name = "${brand.text} ${model.text}"
-                car.year = year.text.toString().toIntOrNull() ?: car.year
-                car.price = price.text.toString()
-                car.mileage = mileage.text.toString()
-                car.location = location.text.toString()
-                adapter.notifyDataSetChanged()
-                Toast.makeText(requireContext(), "Data mobil diperbarui", Toast.LENGTH_SHORT).show()
+                val updates = hashMapOf<String, Any>(
+                    "brand" to brand.text.toString(),
+                    "name" to "${brand.text} ${model.text}",
+                    "year" to (year.text.toString().toIntOrNull() ?: car.year),
+                    "price" to price.text.toString(),
+                    "mileage" to mileage.text.toString(),
+                    "location" to location.text.toString()
+                )
+
+                // Update ke Firestore
+                db.collection("cars").document(car.documentId)
+                    .update(updates)
+                    .addOnSuccessListener {
+                        Toast.makeText(requireContext(), "Data mobil diperbarui", Toast.LENGTH_SHORT).show()
+                        loadMyCars()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(requireContext(), "Gagal update", Toast.LENGTH_SHORT).show()
+                    }
             }
             .setNegativeButton("Batal", null)
             .show()
@@ -190,22 +175,34 @@ class SellFragment : Fragment() {
             .setTitle("Hapus Mobil")
             .setMessage("Apakah kamu yakin ingin menghapus mobil '${car.name}' dari daftar penjualan?")
             .setPositiveButton("Hapus") { _, _ ->
-                val position = myCars.indexOf(car)
-                if (position != -1) {
-                    myCars.removeAt(position)
-                    adapter.notifyItemRemoved(position)
-                    Toast.makeText(requireContext(), "Mobil berhasil dihapus", Toast.LENGTH_SHORT)
-                        .show()
-                }
+                // Hapus dokumen dari Firestore
+                db.collection("cars").document(car.documentId)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(requireContext(), "Mobil berhasil dihapus", Toast.LENGTH_SHORT).show()
+                        loadMyCars()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(requireContext(), "Gagal menghapus", Toast.LENGTH_SHORT).show()
+                    }
             }
             .setNegativeButton("Batal", null)
             .show()
     }
 
     private fun toggleSoldStatus(car: Car) {
-        car.isSold = !car.isSold
-        adapter.notifyDataSetChanged()
-        Toast.makeText(requireContext(), "Status mobil diperbarui", Toast.LENGTH_SHORT).show()
+        val newStatus = !car.isSold
+
+        // Update field "isSold" di Firestore
+        db.collection("cars").document(car.documentId)
+            .update("isSold", newStatus)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Status mobil diperbarui", Toast.LENGTH_SHORT).show()
+                loadMyCars()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Gagal update status", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun onDestroyView() {
