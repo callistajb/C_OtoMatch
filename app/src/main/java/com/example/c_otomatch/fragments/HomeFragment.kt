@@ -43,26 +43,34 @@ class HomeFragment : Fragment() {
         recyclerView = view.findViewById(R.id.rvCars)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        adapter = CarAdapter(displayedCarList, { car ->
-            val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
-                putExtra("car_document_id", car.documentId) // KIRIM ID DOKUMEN
-                putExtra("car_name", car.name)
-                putExtra("car_brand", car.brand)
-                putExtra("car_year", car.year)
-                putExtra("car_price", car.price)
-                putExtra("car_mileage", car.mileage)
-                putExtra("car_location", car.location)
-                putExtra("car_image_url", car.imageUrl) // KIRIM IMAGE URL
-                putExtra("seller_name", car.sellerName)
-                putExtra("seller_contact", car.sellerContact)
-                putExtra("body_type", car.bodyType)
-                putExtra("color", car.color)
-                putExtra("transmission", car.transmission)
-                putExtra("fuel", car.fuel)
-                putExtra("km_range", car.kmRange)
-            }
-            startActivity(intent)
-        })
+        adapter = CarAdapter(
+            displayedCarList,
+            { car ->
+                // Ini parameter ke-1 (onItemClicked)
+                val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
+                    putExtra("car_document_id", car.documentId)
+                    putExtra("car_name", car.name)
+                    putExtra("car_brand", car.brand)
+                    putExtra("car_year", car.year)
+                    putExtra("car_price", car.price)
+                    putExtra("car_mileage", car.mileage)
+                    putExtra("car_location", car.location)
+                    putExtra("car_image_url", car.imageUrl)
+                    putExtra("seller_name", car.sellerName)
+                    putExtra("seller_contact", car.sellerContact)
+                    putExtra("body_type", car.bodyType)
+                    putExtra("color", car.color)
+                    putExtra("transmission", car.transmission)
+                    putExtra("fuel", car.fuel)
+                    putExtra("km_range", car.kmRange)
+                }
+                startActivity(intent)
+            },
+            {
+            },
+            isSellFragment = false
+        )
+
         recyclerView.adapter = adapter
 
         loadCarsFromFirestore()
@@ -88,14 +96,21 @@ class HomeFragment : Fragment() {
                     isSortInitialized = true
                     return
                 }
+                // Urutkan list yang sedang ditampilkan
+                val listToSort = displayedCarList.toMutableList()
+
                 val sortedList = when (position) {
-                    1 -> displayedCarList.sortedBy { safePriceToLong(it.price) }
-                    2 -> displayedCarList.sortedByDescending { safePriceToLong(it.price) }
-                    3 -> displayedCarList.sortedByDescending { it.year }
-                    4 -> displayedCarList.sortedBy { it.year }
-                    else -> allCarsList
+                    1 -> listToSort.sortedBy { safePriceToLong(it.price) }
+                    2 -> listToSort.sortedByDescending { safePriceToLong(it.price) }
+                    3 -> listToSort.sortedByDescending { it.year }
+                    4 -> listToSort.sortedBy { it.year }
+                    else -> allCarsList // Kembali ke list master jika "Default"
                 }
-                adapter.updateList(sortedList)
+
+                // Perbarui adapter dengan list yang sudah difilter/disortir
+                displayedCarList.clear()
+                displayedCarList.addAll(sortedList)
+                adapter.updateList(displayedCarList)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
@@ -106,12 +121,10 @@ class HomeFragment : Fragment() {
 
     private fun loadCarsFromFirestore() {
         db.collection("cars")
-            .whereEqualTo("isSold", false)
+            .whereEqualTo("isSold", false) // Hanya tampilkan yang 'Tersedia'
             .get()
             .addOnSuccessListener { result ->
                 allCarsList.clear()
-                displayedCarList.clear()
-
                 for (document in result) {
                     try {
                         val car = document.toObject(Car::class.java)
@@ -122,8 +135,8 @@ class HomeFragment : Fragment() {
                     }
                 }
 
-                displayedCarList.addAll(allCarsList)
-                adapter.updateList(displayedCarList)
+                // Panggil filterCars dengan query kosong untuk memuat data awal
+                filterCars(query = "")
             }
             .addOnFailureListener { exception ->
                 Log.w("HomeFragment", "Error getting documents: ", exception)
@@ -135,12 +148,19 @@ class HomeFragment : Fragment() {
         val filtered = if (query.isEmpty()) {
             allCarsList // Tampilkan semua jika query kosong
         } else {
+            // Selalu filter dari list master
             allCarsList.filter {
                 it.name.contains(query, ignoreCase = true) ||
                         it.brand.contains(query, ignoreCase = true)
             }
         }
-        adapter.updateList(filtered)
+
+        // Simpan hasil filter ke list yang ditampilkan
+        displayedCarList.clear()
+        displayedCarList.addAll(filtered)
+
+        // Update adapter
+        adapter.updateList(displayedCarList)
     }
 
     private fun safePriceToLong(priceStr: String?): Long {

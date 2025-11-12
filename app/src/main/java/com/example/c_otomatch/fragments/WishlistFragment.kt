@@ -26,6 +26,7 @@ class WishlistFragment : Fragment() {
     private lateinit var adapter: CarAdapter
     private val wishlistCars = mutableListOf<Car>()
 
+    // Firebase
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
 
@@ -64,6 +65,8 @@ class WishlistFragment : Fragment() {
                     putExtra("km_range", car.kmRange)
                 }
                 startActivity(intent)
+            },
+            onMarkSoldClicked = {
             },
             isSellFragment = false
         )
@@ -110,6 +113,11 @@ class WishlistFragment : Fragment() {
     }
 
     private fun fetchCarsFromIds(carIds: List<String>) {
+        if (carIds.isEmpty()) {
+            showEmpty(true)
+            return
+        }
+
         db.collection("cars")
             .whereIn(FieldPath.documentId(), carIds) // Query mobil berdasarkan ID dokumen
             .get()

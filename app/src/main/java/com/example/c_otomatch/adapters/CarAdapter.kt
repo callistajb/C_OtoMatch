@@ -11,14 +11,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.c_otomatch.R
 import com.example.c_otomatch.models.Car
-import com.google.android.material.snackbar.Snackbar
 import java.text.NumberFormat
 import android.util.Log
+import com.google.firebase.firestore.FieldValue
 import java.util.*
 
 class CarAdapter(
     private var carList: List<Car>,
     private val onItemClicked: (Car) -> Unit,
+    private val onMarkSoldClicked: (Car) -> Unit,
     private val isSellFragment: Boolean = false
 ) : RecyclerView.Adapter<CarAdapter.CarViewHolder>() {
 
@@ -54,37 +55,27 @@ class CarAdapter(
         holder.btnFavorite.setImageResource(
             if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
         )
-
         holder.btnFavorite.setOnClickListener {
-            // Inisialisasi Firebase Auth & DB
             val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
             val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
             val user = auth.currentUser
-
             if (user == null) {
                 Toast.makeText(holder.itemView.context, "Anda harus login untuk menambah wishlist", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
             animateButton(holder.btnFavorite)
-
             car.isWishlist = !car.isWishlist
             holder.btnFavorite.setImageResource(
                 if (car.isWishlist) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
             )
-
             val userDocRef = db.collection("users").document(user.uid)
             val carId = car.documentId
-
             if (carId.isBlank()) {
                 Log.e("CarAdapter", "Car documentId is blank. Cannot update wishlist.")
                 return@setOnClickListener
             }
-
-            // Update data di Firestore
             if (car.isWishlist) {
-                // Jika ditambah ke wishlist -> tambahkan ID mobil ke array 'wishlist'
-                userDocRef.update("wishlist", com.google.firebase.firestore.FieldValue.arrayUnion(carId))
+                userDocRef.update("wishlist", FieldValue.arrayUnion(carId))
                     .addOnSuccessListener {
                         Toast.makeText(holder.itemView.context, "Ditambahkan ke wishlist", Toast.LENGTH_SHORT).show()
                     }
@@ -94,8 +85,7 @@ class CarAdapter(
                         holder.btnFavorite.setImageResource(R.drawable.ic_wishlist_border)
                     }
             } else {
-                // Jika dihapus dari wishlist -> hapus ID mobil dari array 'wishlist'
-                userDocRef.update("wishlist", com.google.firebase.firestore.FieldValue.arrayRemove(carId))
+                userDocRef.update("wishlist", FieldValue.arrayRemove(carId))
                     .addOnSuccessListener {
                         Toast.makeText(holder.itemView.context, "Dihapus dari wishlist", Toast.LENGTH_SHORT).show()
                     }
@@ -112,26 +102,12 @@ class CarAdapter(
 
         if (isSellFragment) {
             holder.btnMarkSold.visibility = View.VISIBLE
+            // Atur tampilan tombol HANYA berdasarkan data dari Firestore
             holder.btnMarkSold.text = if (car.isSold) "SOLD" else "Mark as SOLD"
             holder.btnMarkSold.alpha = if (car.isSold) 0.6f else 1f
 
             holder.btnMarkSold.setOnClickListener {
-                car.isSold = !car.isSold
-
-                holder.btnMarkSold.text = if (car.isSold) "SOLD" else "Mark as SOLD"
-                holder.btnMarkSold.alpha = if (car.isSold) 0.6f else 1f
-                holder.tvSoldLabel.visibility = if (car.isSold) View.VISIBLE else View.GONE
-
-                Snackbar.make(
-                    holder.itemView,
-                    if (car.isSold)
-                        "${car.name} ditandai sebagai SOLD"
-                    else
-                        "${car.name} dikembalikan menjadi tersedia",
-                    Snackbar.LENGTH_SHORT
-                ).show()
-
-                notifyItemChanged(position)
+                onMarkSoldClicked(car) // Laporkan klik ini ke Fragment
             }
         } else {
             holder.btnMarkSold.visibility = View.GONE

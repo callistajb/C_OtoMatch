@@ -18,17 +18,22 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.cloudinary.android.MediaManager // IMPORT CLOUDINARY
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback // IMPORT CLOUDINARY
 import com.example.c_otomatch.R
-import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 
 class EditProfileFragment : Fragment() {
+
+    private val CLOUD_NAME = "dqehqqz7q"
+    private val UPLOAD_PRESET = "OtoMatch_preset"
 
     private lateinit var ivProfile: ImageView
     private lateinit var etName: EditText
@@ -39,17 +44,12 @@ class EditProfileFragment : Fragment() {
     private lateinit var btnSaveProfile: Button
     private lateinit var btnUseMyLocation: Button
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-
-    private var currentPhotoUri: Uri? = null // Uri baru yang dipilih
-    private var existingPhotoUrl: String? = null // URL foto lama dari Firestore
-
-    // Firebase
+    private var currentPhotoUri: Uri? = null
+    private var existingPhotoUrl: String? = null
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
-    private lateinit var storage: FirebaseStorage
     private lateinit var progressDialog: ProgressDialog
 
-    // Gallery picker
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent(),
         ActivityResultCallback { uri: Uri? ->
@@ -58,8 +58,6 @@ class EditProfileFragment : Fragment() {
                 ivProfile.setImageURI(it)
             }
         })
-
-    // Camera
     private val takePictureLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
             bitmap?.let {
@@ -68,16 +66,12 @@ class EditProfileFragment : Fragment() {
                 ivProfile.setImageURI(uri)
             }
         }
-
-    // Permission untuk kamera
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) takePictureLauncher.launch(null)
         else Toast.makeText(requireContext(), "Izin kamera ditolak", Toast.LENGTH_SHORT).show()
     }
-
-    // Permission untuk lokasi
     private val requestLocationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -89,11 +83,7 @@ class EditProfileFragment : Fragment() {
                         val lon = location.longitude
                         etLocation.setText(String.format("Lat: %.6f, Lon: %.6f", lat, lon))
                     } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Gagal mendapatkan lokasi. Isi manual saja.",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(requireContext(), "Gagal mendapatkan lokasi", Toast.LENGTH_SHORT).show()
                     }
                 }.addOnFailureListener {
                     Toast.makeText(requireContext(), "Gagal mendapatkan lokasi", Toast.LENGTH_SHORT).show()
@@ -106,7 +96,6 @@ class EditProfileFragment : Fragment() {
         }
     }
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -115,7 +104,12 @@ class EditProfileFragment : Fragment() {
         // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
-        storage = FirebaseStorage.getInstance()
+
+        // Inisialisasi Cloudinary
+        val config = hashMapOf(
+            "cloud_name" to CLOUD_NAME
+        )
+        MediaManager.init(requireContext(), config)
 
         progressDialog = ProgressDialog(requireContext()).apply {
             setTitle("Menyimpan...")
@@ -130,15 +124,12 @@ class EditProfileFragment : Fragment() {
         btnChangePassword = v.findViewById(R.id.btnChangePassword)
         btnSaveProfile = v.findViewById(R.id.btnSaveProfile)
         btnUseMyLocation = v.findViewById(R.id.btnUseMyLocation)
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-
-        loadProfile() // Load data dari Firestore
-
+        loadProfile()
         ivProfile.setOnClickListener { showPhotoChooser() }
         btnChangePassword.setOnClickListener { showChangePasswordDialog() }
         btnSaveProfile.setOnClickListener {
-            saveProfile() // Simpan data ke Firestore/Storage
+            saveProfile()
         }
         btnUseMyLocation.setOnClickListener {
             requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -149,17 +140,14 @@ class EditProfileFragment : Fragment() {
 
     private fun loadProfile() {
         val user = auth.currentUser ?: return
-
-        // Ambil data dari Firestore
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
                 if (doc != null && doc.exists()) {
                     etName.setText(doc.getString("name"))
-                    etUsername.setText(doc.getString("email")) // Email ga bisa diubah dari sini
-                    etUsername.isEnabled = false // Matikan edit email
+                    etUsername.setText(doc.getString("email"))
+                    etUsername.isEnabled = false
                     etPhone.setText(doc.getString("phone"))
                     etLocation.setText(doc.getString("location"))
-
                     existingPhotoUrl = doc.getString("profileImageUrl")
                     if (!existingPhotoUrl.isNullOrEmpty()) {
                         Glide.with(this)
@@ -171,7 +159,6 @@ class EditProfileFragment : Fragment() {
                 }
             }
     }
-
     private fun showPhotoChooser() {
         val options = arrayOf("Ambil Foto (Kamera)", "Pilih dari Galeri")
         AlertDialog.Builder(requireContext())
@@ -185,14 +172,12 @@ class EditProfileFragment : Fragment() {
                         if (hasCameraPermission) takePictureLauncher.launch(null)
                         else requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
-
                     1 -> pickImageLauncher.launch("image/*")
                 }
             }
             .setNegativeButton("Batal", null)
             .show()
     }
-
     private fun saveBitmapToMediaStore(bitmap: Bitmap): Uri? {
         val filename = "profile_${System.currentTimeMillis()}.jpg"
         val values = android.content.ContentValues().apply {
@@ -203,109 +188,35 @@ class EditProfileFragment : Fragment() {
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
         }
-
         val resolver = requireContext().contentResolver
         val uri: Uri? = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
         if (uri == null) {
             Toast.makeText(requireContext(), "Gagal membuat file gambar", Toast.LENGTH_SHORT).show()
             return null
         }
-
         try {
             resolver.openOutputStream(uri)?.use { stream ->
                 val success = bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
                 if (!success) return null
             } ?: return null
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 values.clear()
                 values.put(MediaStore.Images.Media.IS_PENDING, 0)
                 resolver.update(uri, values, null, null)
             }
-
         } catch (e: Exception) {
             e.printStackTrace()
             return null
         }
-
         return uri
     }
-
-    private fun saveProfile() {
-        val user = auth.currentUser
-        if (user == null) {
-            Toast.makeText(requireContext(), "User tidak ditemukan", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        progressDialog.show()
-
-        if (currentPhotoUri != null) {
-            val storageRef = storage.reference.child("profile_images/${user.uid}.jpg")
-            storageRef.putFile(currentPhotoUri!!)
-                .addOnSuccessListener {
-                    storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                        updateUserDocument(user.uid, downloadUrl.toString())
-                    }
-                }
-                .addOnFailureListener { e ->
-                    progressDialog.dismiss()
-                    Toast.makeText(requireContext(), "Gagal upload foto: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        } else {
-            updateUserDocument(user.uid, existingPhotoUrl) // Gunakan URL foto lama
-        }
-    }
-
-    private fun updateUserDocument(uid: String, imageUrl: String?) {
-        val name = etName.text.toString().trim()
-        val phone = etPhone.text.toString().trim()
-        val location = etLocation.text.toString().trim()
-
-        if (name.isBlank()) {
-            etName.error = "Nama wajib diisi"
-            progressDialog.dismiss()
-            return
-        }
-
-        val userDataUpdates = hashMapOf<String, Any>(
-            "name" to name,
-            "phone" to phone,
-            "location" to location
-        )
-
-        if (imageUrl != null) {
-            userDataUpdates["profileImageUrl"] = imageUrl
-        }
-
-        // Update ke Firestore
-        db.collection("users").document(uid)
-            .update(userDataUpdates)
-            .addOnSuccessListener {
-                progressDialog.dismiss()
-                Toast.makeText(requireContext(), "Profil diperbarui", Toast.LENGTH_SHORT).show()
-                // Update juga nama di Auth
-                val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(name).build()
-                auth.currentUser?.updateProfile(profileUpdates)
-
-                parentFragmentManager.popBackStack()
-            }
-            .addOnFailureListener { e ->
-                progressDialog.dismiss()
-                Toast.makeText(requireContext(), "Gagal simpan profil: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-
     private fun showChangePasswordDialog() {
         val user = auth.currentUser ?: return
-
         val view = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_change_password, null)
         val etOld = view.findViewById<EditText>(R.id.etOldPassword)
         val etNew = view.findViewById<EditText>(R.id.etNewPassword)
         val etConfirm = view.findViewById<EditText>(R.id.etConfirmPassword)
-
         AlertDialog.Builder(requireContext())
             .setTitle("Ganti Password")
             .setView(view)
@@ -313,7 +224,6 @@ class EditProfileFragment : Fragment() {
                 val old = etOld.text.toString()
                 val nw = etNew.text.toString()
                 val c = etConfirm.text.toString()
-
                 if (old.isEmpty() || nw.isEmpty() || c.isEmpty()) {
                     Toast.makeText(requireContext(), "Semua field wajib diisi", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
@@ -326,8 +236,6 @@ class EditProfileFragment : Fragment() {
                     Toast.makeText(requireContext(), "Konfirmasi password tidak cocok", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-
-                // Re-autentikasi user sebelum ganti password
                 val credential = EmailAuthProvider.getCredential(user.email!!, old)
                 user.reauthenticate(credential)
                     .addOnSuccessListener {
@@ -349,5 +257,81 @@ class EditProfileFragment : Fragment() {
             }
             .setNegativeButton("Batal", null)
             .show()
+    }
+
+
+    private fun saveProfile() {
+        val user = auth.currentUser
+        if (user == null) {
+            Toast.makeText(requireContext(), "User tidak ditemukan", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        progressDialog.show()
+
+        // Cek apakah user memilih foto baru
+        if (currentPhotoUri != null) {
+            // Upload foto baru ke Cloudinary
+            progressDialog.setMessage("Mengupload foto profil...")
+            MediaManager.get().upload(currentPhotoUri!!)
+                .unsigned(UPLOAD_PRESET)
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String) {}
+                    override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
+
+                    override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                        val downloadUrl = resultData["secure_url"] as String
+                        progressDialog.setMessage("Menyimpan profil...")
+                        updateUserDocument(user.uid, downloadUrl)
+                    }
+
+                    override fun onError(requestId: String, error: ErrorInfo) {
+                        progressDialog.dismiss()
+                        Toast.makeText(requireContext(), "Gagal upload foto: ${error.description}", Toast.LENGTH_SHORT).show()
+                    }
+
+                    override fun onReschedule(requestId: String, error: ErrorInfo) {}
+                })
+                .dispatch()
+        } else {
+            // Update data teks saja (foto tidak berubah)
+            updateUserDocument(user.uid, existingPhotoUrl) // Gunakan URL foto lama
+        }
+    }
+
+    private fun updateUserDocument(uid: String, imageUrl: String?) {
+        val name = etName.text.toString().trim()
+        val phone = etPhone.text.toString().trim()
+        val location = etLocation.text.toString().trim()
+
+        if (name.isBlank()) {
+            etName.error = "Nama wajib diisi"
+            progressDialog.dismiss()
+            return
+        }
+
+        val userDataUpdates = hashMapOf<String, Any>(
+            "name" to name,
+            "phone" to phone,
+            "location" to location
+        )
+        if (imageUrl != null) {
+            userDataUpdates["profileImageUrl"] = imageUrl
+        }
+
+        db.collection("users").document(uid)
+            .update(userDataUpdates)
+            .addOnSuccessListener {
+                progressDialog.dismiss()
+                Toast.makeText(requireContext(), "Profil diperbarui", Toast.LENGTH_SHORT).show()
+                val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(name).build()
+                auth.currentUser?.updateProfile(profileUpdates)
+
+                parentFragmentManager.popBackStack()
+            }
+            .addOnFailureListener { e ->
+                progressDialog.dismiss()
+                Toast.makeText(requireContext(), "Gagal simpan profil: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }

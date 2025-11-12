@@ -6,33 +6,38 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
-import androidx.appcompat.widget.Toolbar
+import android.provider.MediaStore
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import com.cloudinary.android.MediaManager // IMPORT CLOUDINARY
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback // IMPORT CLOUDINARY
 import com.example.c_otomatch.databinding.ActivityAddCarBinding
 import com.example.c_otomatch.models.Car
-// IMPORT SEMUA FIREBASE
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+// HAPUS IMPORT FIREBASE STORAGE
+// import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.util.*
 
 class SellCarActivity : AppCompatActivity() {
 
+    private val CLOUD_NAME = "dqehqqz7q"
+    private val UPLOAD_PRESET = "OtoMatch_preset"
+
     private lateinit var binding: ActivityAddCarBinding
     private var imageUri: Uri? = null
-
-    // Firebase
-    private lateinit var storage: FirebaseStorage
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
     private lateinit var progressDialog: ProgressDialog
 
-    // Launcher Gallery
+    // (Launcher Anda sudah OK, tidak perlu diubah)
     private val pickGallery =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) {
@@ -40,8 +45,6 @@ class SellCarActivity : AppCompatActivity() {
                 binding.imgPreview.setImageURI(uri)
             }
         }
-
-    // Launcher Camera
     private val takePhoto =
         registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
             if (bitmap != null) {
@@ -49,11 +52,10 @@ class SellCarActivity : AppCompatActivity() {
                 binding.imgPreview.setImageBitmap(bitmap)
             }
         }
-
     private fun getImageUriFromBitmap(bitmap: Bitmap): Uri {
         val bytes = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-        val path = android.provider.MediaStore.Images.Media.insertImage(
+        val path = MediaStore.Images.Media.insertImage(
             contentResolver,
             bitmap,
             "Title_${System.currentTimeMillis()}",
@@ -67,9 +69,14 @@ class SellCarActivity : AppCompatActivity() {
         binding = ActivityAddCarBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        storage = FirebaseStorage.getInstance()
+        // Inisialisasi Firebase
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
+
+        val config = hashMapOf(
+            "cloud_name" to CLOUD_NAME
+        )
+        MediaManager.init(this, config)
 
         progressDialog = ProgressDialog(this).apply {
             setTitle("Uploading...")
@@ -79,33 +86,25 @@ class SellCarActivity : AppCompatActivity() {
 
         val toolbar = findViewById<Toolbar>(R.id.toolbarSellCar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-        toolbar.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
 
         binding.btnGallery.setOnClickListener {
             pickGallery.launch("image/*")
         }
-
         binding.btnCamera.setOnClickListener {
             takePhoto.launch(null)
         }
-
         binding.btnGeneratePrice.setOnClickListener {
             val saran = generatePriceSuggestion()
             binding.tvGeneratedPrice.text = "Harga saran: $saran"
             binding.etPrice.setText(saran)
         }
-
         binding.btnSubmit.setOnClickListener {
             if (validateInputs()) {
                 AlertDialog.Builder(this)
                     .setTitle("Konfirmasi Posting")
                     .setMessage("Yakin ingin memposting mobil ini untuk dijual?")
                     .setPositiveButton("Ya") { _, _ ->
-                        uploadImageAndSaveCar()
+                        uploadImageAndSaveCar() // GANTI KE FUNGSI BARU
                     }
                     .setNegativeButton("Batal", null)
                     .show()
@@ -117,7 +116,6 @@ class SellCarActivity : AppCompatActivity() {
         finish()
         return true
     }
-
     private fun validateInputs(): Boolean {
         if (imageUri == null) {
             Toast.makeText(this, "Silakan pilih gambar mobil", Toast.LENGTH_SHORT).show()
@@ -133,12 +131,10 @@ class SellCarActivity : AppCompatActivity() {
         }
         return true
     }
-
     private fun generatePriceSuggestion(): String {
         val year = binding.etYear.text.toString().toIntOrNull() ?: 2020
         val mileageText = binding.etMileage.text.toString().replace("[^0-9]".toRegex(), "")
         val mileage = mileageText.toIntOrNull() ?: 0
-
         val base = when {
             year >= 2023 -> 350_000_000
             year >= 2019 -> 230_000_000
@@ -157,22 +153,44 @@ class SellCarActivity : AppCompatActivity() {
         }
 
         progressDialog.show()
+        progressDialog.setMessage("Mengupload gambar...")
 
-        val storageRef = storage.reference
-        val imageFileName = "car_images/${System.currentTimeMillis()}_${UUID.randomUUID()}"
-        val imageFileRef = storageRef.child(imageFileName)
-
-        imageFileRef.putFile(imageUri!!)
-            .addOnSuccessListener {
-                imageFileRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                    Toast.makeText(this, "Gambar diupload", Toast.LENGTH_SHORT).show()
-                    saveCarToFirestore(downloadUri.toString())
+        // Upload ke Cloudinary menggunakan Upload Preset
+        MediaManager.get().upload(imageUri!!)
+            .unsigned(UPLOAD_PRESET)
+            .callback(object : UploadCallback {
+                override fun onStart(requestId: String) {
+                    progressDialog.setMessage("Mulai upload...")
                 }
-            }
-            .addOnFailureListener { e ->
-                progressDialog.dismiss()
-                Toast.makeText(this, "Gagal upload gambar: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+
+                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
+                    val progress = (bytes * 100 / totalBytes)
+                    progressDialog.setMessage("Mengupload... $progress%")
+                }
+
+                override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                    // Upload sukses, dapatkan URL
+                    // 'secure_url' adalah URL gambar (https://)
+                    val downloadUrl = resultData["secure_url"] as String
+
+                    Toast.makeText(this@SellCarActivity, "Gambar diupload", Toast.LENGTH_SHORT).show()
+
+                    // Simpan data mobil ke Firestore
+                    progressDialog.setMessage("Menyimpan data mobil...")
+                    saveCarToFirestore(downloadUrl) // Panggil fungsi yang sudah ada
+                }
+
+                override fun onError(requestId: String, error: ErrorInfo) {
+                    // Upload gagal
+                    progressDialog.dismiss()
+                    Log.e("SellCarActivity", "Cloudinary Upload Error: ${error.description}")
+                    Toast.makeText(this@SellCarActivity, "Gagal upload gambar: ${error.description}", Toast.LENGTH_LONG).show()
+                }
+
+                override fun onReschedule(requestId: String, error: ErrorInfo) {
+                }
+            })
+            .dispatch() // Mulai proses upload
     }
 
     private fun saveCarToFirestore(imageUrl: String) {
@@ -182,7 +200,7 @@ class SellCarActivity : AppCompatActivity() {
             binding.etPrice.text.toString()
 
         val newCar = Car(
-            documentId = "", // Akan dibuat otomatis oleh Firestore
+            documentId = "",
             id = (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
             name = "${binding.etBrand.text} ${binding.etModel.text}",
             brand = binding.etBrand.text.toString(),
@@ -190,7 +208,7 @@ class SellCarActivity : AppCompatActivity() {
             price = priceText,
             mileage = binding.etMileage.text.toString(),
             location = binding.etLocation.text.toString(),
-            imageUrl = imageUrl,
+            imageUrl = imageUrl, // <-- SIMPAN URL DARI CLOUDINARY
             isWishlist = false,
             isSold = false,
             sellerName = binding.etSellerName.text.toString().ifEmpty { "Penjual" },
@@ -200,7 +218,7 @@ class SellCarActivity : AppCompatActivity() {
             transmission = binding.etTransmission.text.toString(),
             fuel = binding.etFuelType.text.toString(),
             kmRange = "",
-            sellerUid = auth.currentUser!!.uid // SIMPAN ID PENJUAL
+            sellerUid = auth.currentUser!!.uid
         )
 
         db.collection("cars")
@@ -208,7 +226,6 @@ class SellCarActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 progressDialog.dismiss()
                 Toast.makeText(this, "Mobil berhasil diposting!", Toast.LENGTH_LONG).show()
-
                 setResult(Activity.RESULT_OK)
                 finish()
             }
