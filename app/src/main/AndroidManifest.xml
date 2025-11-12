@@ -5,9 +5,19 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -19,7 +29,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.C_OtoMatch">
 
-        <!-- Splash jadi launcher pertama -->
         <activity
             android:name=".SplashActivity"
             android:exported="true">
@@ -29,7 +38,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Login dan Register -->
         <activity
             android:name=".LoginActivity"
             android:exported="false" />
@@ -37,7 +45,6 @@
             android:name=".RegisterActivity"
             android:exported="false" />
 
-        <!-- Activity lainnya -->
         <activity
             android:name=".SellCarActivity"
             android:exported="false"

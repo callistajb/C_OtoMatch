@@ -8,13 +8,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide // IMPORT GLIDE
+import com.bumptech.glide.Glide
 import com.example.c_otomatch.adapters.CommentAdapter
 import com.example.c_otomatch.databinding.ActivityCarDetailBinding
 import com.example.c_otomatch.models.Comment
-import com.google.firebase.auth.FirebaseAuth // IMPORT AUTH
-import com.google.firebase.firestore.FirebaseFirestore // IMPORT FIRESTORE
-import com.google.firebase.firestore.Query // IMPORT UNTUK SORTING
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 class CarDetailActivity : AppCompatActivity() {
 
@@ -46,13 +46,13 @@ class CarDetailActivity : AppCompatActivity() {
             onBackPressedDispatcher.onBackPressed()
         }
 
-        // Ambil data dari intent
+        // Ambil SEMUA data dari intent
         carDocumentId = intent.getStringExtra("car_document_id")
         val carName = intent.getStringExtra("car_name").orEmpty()
         val carBrand = intent.getStringExtra("car_brand").orEmpty()
         val carYear = intent.getIntExtra("car_year", 0)
         val carPrice = intent.getStringExtra("car_price").orEmpty()
-        val carImageUrl = intent.getStringExtra("car_image_url").orEmpty() // Ambil URL Gambar
+        val carImageUrl = intent.getStringExtra("car_image_url").orEmpty()
         val sellerContact = intent.getStringExtra("seller_contact").orEmpty()
         val carLocation = intent.getStringExtra("car_location").orEmpty()
         val sellerName = intent.getStringExtra("seller_name").orEmpty()
@@ -60,7 +60,10 @@ class CarDetailActivity : AppCompatActivity() {
         val color = intent.getStringExtra("color").orEmpty()
         val transmission = intent.getStringExtra("transmission").orEmpty()
         val fuel = intent.getStringExtra("fuel").orEmpty()
-        val kmRange = intent.getStringExtra("km_range").orEmpty()
+        val mileage = intent.getStringExtra("mileage").orEmpty() // Pake mileage
+        val variant = intent.getStringExtra("variant").orEmpty()
+        val capacity = intent.getStringExtra("capacity").orEmpty()
+        // Kamu juga bisa tambahin 'negatives' dan 'mods' kalo mau ditampilin
 
         // Tampilkan gambar pakai Glide
         Glide.with(this)
@@ -69,6 +72,7 @@ class CarDetailActivity : AppCompatActivity() {
             .error(R.drawable.ic_car)
             .into(binding.imgCarDetail)
 
+        // Tampilkan semua data ke UI
         binding.apply {
             tvCarNameDetail.text = carName
             tvCarBrandDetail.text = carBrand
@@ -77,11 +81,15 @@ class CarDetailActivity : AppCompatActivity() {
             tvCarLocationDetail.text = "Lokasi: $carLocation"
             tvSellerDetail.text = "Penjual: $sellerName"
             tvContactDetail.text = sellerContact.ifEmpty { "Tidak tersedia" }
+
+            // Spek Detail (udah diupdate)
+            tvVariantDetail.text = "Varian: ${variant.ifEmpty { "-" }}"
             tvBodyDetail.text = "Tipe: ${bodyType.ifEmpty { "-" }}"
             tvColorDetail.text = "Warna: ${color.ifEmpty { "-" }}"
             tvTransmissionDetail.text = "Transmisi: ${transmission.ifEmpty { "-" }}"
             tvFuelDetail.text = "Bahan Bakar: ${fuel.ifEmpty { "-" }}"
-            tvKmRangeDetail.text = "Jarak Tempuh: ${kmRange.ifEmpty { "-" }}"
+            tvKmRangeDetail.text = "Jarak Tempuh: ${mileage.ifEmpty { "-" }}" // Ganti ke mileage
+            tvCapacityDetail.text = "Kapasitas Mesin: ${capacity.ifEmpty { "-" }}"
         }
 
         // Setup RecyclerView untuk komentar
@@ -122,7 +130,8 @@ class CarDetailActivity : AppCompatActivity() {
                     // Dapat nama user dari Firestore
                     db.collection("users").document(auth.currentUser!!.uid).get()
                         .addOnSuccessListener {
-                            val userName = it.getString("name") ?: "Anonim"
+                            // Pake 'username' aja biar keren
+                            val userName = it.getString("username") ?: "Anonim"
                             val newComment = Comment(
                                 userName = userName,
                                 text = commentText,
@@ -136,6 +145,7 @@ class CarDetailActivity : AppCompatActivity() {
             }
         }
 
+        // Tombol kontak
         binding.btnContactSeller.setOnClickListener {
             if (sellerContact.isEmpty()) {
                 Toast.makeText(this, "Nomor penjual tidak tersedia", Toast.LENGTH_SHORT).show()
@@ -149,6 +159,7 @@ class CarDetailActivity : AppCompatActivity() {
     private fun loadComments(carId: String) {
         db.collection("cars").document(carId)
             .collection("comments")
+            .orderBy("rating", Query.Direction.DESCENDING) // Urutin komen
             .get()
             .addOnSuccessListener { result ->
                 commentList.clear()
@@ -171,12 +182,12 @@ class CarDetailActivity : AppCompatActivity() {
     private fun submitComment(carId: String, comment: Comment) {
         db.collection("cars").document(carId)
             .collection("comments")
-            .add(comment) // Tambah komentar baru
+            .add(comment)
             .addOnSuccessListener {
                 Log.d("CarDetail", "Comment added")
                 binding.etCommentInput.setText("")
                 binding.ratingBarInput.rating = 0f
-                // Tambahkan langsung ke list lokal
+                // Tambahin ke list lokal, biar langsung muncul
                 addCommentToList(comment)
             }
             .addOnFailureListener {
@@ -185,7 +196,7 @@ class CarDetailActivity : AppCompatActivity() {
     }
 
     private fun addCommentToList(comment: Comment) {
-        commentList.add(0, comment)
+        commentList.add(0, comment) // Tampil di paling atas
         commentAdapter.notifyItemInserted(0)
         binding.rvComments.scrollToPosition(0)
         updateAvgRating()

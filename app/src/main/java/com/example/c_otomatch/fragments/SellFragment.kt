@@ -12,18 +12,25 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.textfield.TextInputEditText
 import com.example.c_otomatch.R
-import com.example.c_otomatch.SellCarActivity
+import com.example.c_otomatch.SellCarActivity // <-- Pastiin ini di-import
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.databinding.FragmentSellBinding
 import com.example.c_otomatch.models.Car
+import com.example.c_otomatch.utils.NumberTextWatcher
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source // <-- INI DIA YANG HILANG
+import java.text.NumberFormat
+import java.util.Locale
 
 class SellFragment : Fragment() {
 
     private var _binding: FragmentSellBinding? = null
     private val binding get() = _binding!!
+
     private val myCarsList = mutableListOf<Car>()
     private lateinit var adapter: CarAdapter
     private lateinit var auth: FirebaseAuth
@@ -45,15 +52,17 @@ class SellFragment : Fragment() {
 
         adapter = CarAdapter(
             myCarsList,
-            { car -> showCarOptionsDialog(car) }, // Listener klik item (untuk dialog)
-            { car -> toggleSoldStatus(car) },     // Listener klik tombol "Mark as SOLD"
+            { car -> showCarOptionsDialog(car) }, // Klik di card
+            { car -> toggleSoldStatus(car) },     // Klik di tombol 'Mark as SOLD'
             isSellFragment = true
         )
 
         binding.recyclerSellCars.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerSellCars.adapter = adapter
 
+        // Tombol + (FAB) buat JUAL BARU
         binding.fabAddCar.setOnClickListener {
+            // Buka SellCarActivity tanpa ngirim ID
             val intent = Intent(requireContext(), SellCarActivity::class.java)
             addCarLauncher.launch(intent)
         }
@@ -61,9 +70,10 @@ class SellFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        loadMyCars()
+        loadMyCars() // Refresh data tiap kali tab ini dibuka
     }
 
+    // Ambil mobil yang sellerUid-nya = uid-ku
     private fun loadMyCars() {
         val user = auth.currentUser
         if (user == null) {
@@ -75,7 +85,7 @@ class SellFragment : Fragment() {
 
         db.collection("cars")
             .whereEqualTo("sellerUid", user.uid)
-            .get()
+            .get(Source.SERVER) // Ambil dari server aja biar datanya fresh
             .addOnSuccessListener { result ->
                 myCarsList.clear()
                 for (document in result) {
@@ -87,8 +97,7 @@ class SellFragment : Fragment() {
                         Log.e("SellFragment", "Error converting car", e)
                     }
                 }
-                // Urutkan agar yang 'Tersedia' (isSold=false) muncul di atas
-                myCarsList.sortBy { it.isSold }
+                myCarsList.sortBy { it.isSold } // Yang sold pindah ke bawah
                 adapter.updateList(myCarsList)
             }
             .addOnFailureListener { e ->
@@ -97,11 +106,15 @@ class SellFragment : Fragment() {
             }
     }
 
+    // Launcher ini dipake buat JUAL dan EDIT
+    // Kalo sukses, kita refresh list
     private val addCarLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            Log.d("SellFragment", "New car added, onResume will refresh.")
+            Log.d("SellFragment", "SellCarActivity selesai, onResume bakal refresh.")
+            // Ga usah panggil loadMyCars() di sini,
+            // onResume() udah otomatis manggil pas kita balik ke fragment ini
         }
     }
 
@@ -115,7 +128,7 @@ class SellFragment : Fragment() {
             .setTitle(car.name)
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> showEditCarDialog(car)
+                    0 -> startEditCarActivity(car) // <-- Ini GANTI JADI FUNGSI BARU
                     1 -> deleteCar(car)
                     2 -> toggleSoldStatus(car)
                 }
@@ -123,61 +136,30 @@ class SellFragment : Fragment() {
             .show()
     }
 
-    private fun showEditCarDialog(car: Car) {
-        // (Tidak ada perubahan di sini)
-        val dialogView =
-            LayoutInflater.from(requireContext()).inflate(R.layout.activity_add_car, null)
-        val brand = dialogView.findViewById<EditText>(R.id.etBrand)
-        val model = dialogView.findViewById<EditText>(R.id.etModel)
-        val year = dialogView.findViewById<EditText>(R.id.etYear)
-        val mileage = dialogView.findViewById<EditText>(R.id.etMileage)
-        val location = dialogView.findViewById<EditText>(R.id.etLocation)
-        val price = dialogView.findViewById<EditText>(R.id.etPrice)
-        brand.setText(car.brand)
-        model.setText(car.name.replace("${car.brand} ", ""))
-        year.setText(car.year.toString())
-        price.setText(car.price)
-        mileage.setText(car.mileage)
-        location.setText(car.location)
-        AlertDialog.Builder(requireContext())
-            .setTitle("Edit Mobil")
-            .setView(dialogView)
-            .setPositiveButton("Simpan") { _, _ ->
-                val updates = hashMapOf<String, Any>(
-                    "brand" to brand.text.toString(),
-                    "name" to "${brand.text} ${model.text}",
-                    "year" to (year.text.toString().toIntOrNull() ?: car.year),
-                    "price" to price.text.toString(),
-                    "mileage" to mileage.text.toString(),
-                    "location" to location.text.toString()
-                )
-                db.collection("cars").document(car.documentId)
-                    .update(updates)
-                    .addOnSuccessListener {
-                        Toast.makeText(requireContext(), "Data mobil diperbarui", Toast.LENGTH_SHORT).show()
-                        loadMyCars()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(requireContext(), "Gagal update", Toast.LENGTH_SHORT).show()
-                    }
-            }
-            .setNegativeButton("Batal", null)
-            .show()
+    // --- ⬇️ INI FUNGSI BARU UNTUK EDIT ⬇️ ---
+    // Buka SellCarActivity tapi kirim ID mobilnya
+    private fun startEditCarActivity(car: Car) {
+        val intent = Intent(requireContext(), SellCarActivity::class.java)
+        intent.putExtra("EDIT_CAR_ID", car.documentId) // Kirim ID-nya
+        addCarLauncher.launch(intent) // Pake launcher yg sama
     }
+    // --- ⬆️ SELESAI FUNGSI BARU ⬆️ ---
+
+    // --- FUNGSI showEditCarDialog(car) SEKARANG DIHAPUS KARENA GA KEPAKE LAGI ---
 
     private fun deleteCar(car: Car) {
         AlertDialog.Builder(requireContext())
             .setTitle("Hapus Mobil")
             .setMessage("Apakah kamu yakin ingin menghapus mobil '${car.name}' dari daftar penjualan?")
             .setPositiveButton("Hapus") { _, _ ->
+                // TODO: Hapus juga gambar dari Cloudinary (fitur tambahan nanti)
+
                 db.collection("cars").document(car.documentId)
                     .delete()
                     .addOnSuccessListener {
                         Toast.makeText(requireContext(), "Mobil berhasil dihapus", Toast.LENGTH_SHORT).show()
-                        // Saat mobil dihapus, kita tetap hapus transaksinya
-                        // agar tidak ada data "sampah"
                         deleteTransaction(car.documentId, false)
-                        loadMyCars() // Refresh
+                        loadMyCars() // Langsung refresh
                     }
                     .addOnFailureListener {
                         Toast.makeText(requireContext(), "Gagal menghapus", Toast.LENGTH_SHORT).show()
@@ -188,58 +170,48 @@ class SellFragment : Fragment() {
     }
 
     private fun toggleSoldStatus(car: Car) {
+        // Ini logika Optimistic UI, UI-nya diubah duluan
         val newStatus = !car.isSold
         val oldPosition = myCarsList.indexOf(car)
-        if (oldPosition == -1) return // Pengaman
+        if (oldPosition == -1) return
 
-        // UPDATE UI INSTAN (OPTIMISTIC)
-        car.isSold = newStatus // Ubah data di list lokal
-        myCarsList.sortBy { it.isSold } // Urutkan ulang list lokal
-        val newPosition = myCarsList.indexOf(car) // Cari posisi baru setelah diurut
+        car.isSold = newStatus
+        myCarsList.sortBy { it.isSold }
+        val newPosition = myCarsList.indexOf(car)
 
         adapter.notifyItemMoved(oldPosition, newPosition)
-        adapter.notifyItemChanged(newPosition) // Update tampilan (label SOLD)
+        adapter.notifyItemChanged(newPosition)
 
-        // KIRIM PERUBAHAN KE DATABASE DI BACKEND
+        // Baru update database di belakang layar
         db.collection("cars").document(car.documentId)
             .update("isSold", newStatus)
             .addOnSuccessListener {
                 Log.d("SellFragment", "Status 'isSold' berhasil diupdate di Firestore")
 
-                // Update koleksi transactions
                 if (newStatus == true) {
-                    // --- JIKA BARU DIJUAL (SOLD) ---
-                    // Buat data transaksi baru
+                    // Kalo jadi SOLD, bikin transaksi
                     val transactionData = hashMapOf<String, Any?>(
-                        "carId" to car.documentId,
-                        "carName" to car.name,
-                        "sellerId" to auth.currentUser?.uid,
-                        "salePrice" to car.price,
+                        "carId" to car.documentId, "carName" to car.name,
+                        "sellerId" to auth.currentUser?.uid, "salePrice" to car.price,
                         "soldDate" to com.google.firebase.Timestamp.now(),
-                        "transactionStatus" to "COMPLETED", // Status: Selesai
-                        "canceledDate" to null // Belum dibatalkan
+                        "transactionStatus" to "COMPLETED", "canceledDate" to null
                     )
-
-                    // Simpan ke koleksi "transactions"
                     db.collection("transactions").add(transactionData)
                         .addOnFailureListener { e ->
                             Log.w("SellFragment", "Gagal catat transaksi", e)
                             rollbackSoldStatus(car, "Gagal mencatat transaksi")
                         }
                 } else {
-                    // --- JIKA DIKEMBALIKAN (UN-SOLD) ---
-                    // Ga dihapus, tapi MENG-UPDATE transaksi yang ada
+                    // Kalo jadi UN-SOLD, update transaksinya jadi CANCELED
                     db.collection("transactions")
                         .whereEqualTo("carId", car.documentId)
-                        .whereEqualTo("transactionStatus", "COMPLETED") // Cari yg statusnya 'COMPLETED'
+                        .whereEqualTo("transactionStatus", "COMPLETED")
                         .get()
                         .addOnSuccessListener { querySnapshot ->
                             if (querySnapshot.isEmpty) {
                                 Log.w("SellFragment", "Tidak ada transaksi 'COMPLETED' untuk dibatalkan.")
                                 return@addOnSuccessListener
                             }
-
-                            // Update semua transaksi yg cocok (biasanya 1)
                             val batch = db.batch()
                             for (document in querySnapshot.documents) {
                                 val updates = hashMapOf<String, Any?>(
@@ -249,9 +221,7 @@ class SellFragment : Fragment() {
                                 batch.update(document.reference, updates)
                             }
                             batch.commit()
-                                .addOnSuccessListener {
-                                    Log.d("SellFragment", "Transaksi dibatalkan.")
-                                }
+                                .addOnSuccessListener { Log.d("SellFragment", "Transaksi dibatalkan.") }
                                 .addOnFailureListener { e ->
                                     Log.w("SellFragment", "Gagal update transaksi batch", e)
                                     rollbackSoldStatus(car, "Gagal batal transaksi")
@@ -269,21 +239,19 @@ class SellFragment : Fragment() {
             }
     }
 
+    // Kalo update ke Firestore gagal, balikin UI-nya
     private fun rollbackSoldStatus(car: Car, errorMessage: String) {
         Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
-
         val oldPosition = myCarsList.indexOf(car)
         if (oldPosition == -1) return
-
-        car.isSold = !car.isSold // Kembalikan statusnya
-        myCarsList.sortBy { it.isSold } // Urutkan lagi
+        car.isSold = !car.isSold // Balikin statusnya
+        myCarsList.sortBy { it.isSold }
         val newPosition = myCarsList.indexOf(car)
-
         adapter.notifyItemMoved(oldPosition, newPosition)
         adapter.notifyItemChanged(newPosition)
     }
 
-    // Fungsi ini HANYA dipakai saat mobil di-delete permanen
+    // Kalo mobil dihapus, hapus juga transaksinya
     private fun deleteTransaction(carId: String, enableRollback: Boolean) {
         db.collection("transactions")
             .whereEqualTo("carId", carId)
@@ -296,7 +264,7 @@ class SellFragment : Fragment() {
                 batch.commit()
                     .addOnSuccessListener {
                         Log.d("SellFragment", "Transaksi terkait mobil yg dihapus, ikut dihapus.")
-                        if (!enableRollback) loadMyCars() // Refresh jika dipanggil dari deleteCar
+                        if (!enableRollback) loadMyCars()
                     }
                     .addOnFailureListener { e ->
                         Log.w("SellFragment", "Gagal hapus transaksi batch", e)

@@ -3,14 +3,13 @@ package com.example.c_otomatch
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns // Import buat validasi email
 import androidx.appcompat.app.AppCompatActivity
 import com.example.c_otomatch.databinding.ActivityRegisterBinding
-// HAPUS Prefs
-// import com.example.c_otomatch.utils.Prefs
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth // IMPORT AUTH
-import com.google.firebase.auth.UserProfileChangeRequest // IMPORT UNTUK UPDATE NAMA
-import com.google.firebase.firestore.FirebaseFirestore // IMPORT FIRESTORE
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -37,85 +36,119 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun registerUser() {
+        // Ambil semua data baru
         val name = binding.inputName.text.toString().trim()
+        val username = binding.inputUsername.text.toString().trim()
         val email = binding.inputEmail.text.toString().trim()
+        val phone = binding.inputPhone.text.toString().trim()
         val password = binding.inputPassword.text.toString()
         val confirmPassword = binding.inputConfirmPassword.text.toString()
 
-        when {
-            name.isEmpty() -> {
-                binding.inputName.error = "Masukkan nama lengkap"
-                return
-            }
-            email.isEmpty() -> {
-                binding.inputEmail.error = "Masukkan email"
-                return
-            }
-            password.length < 6 -> {
-                binding.inputPassword.error = "Password minimal 6 karakter"
-                return
-            }
-            confirmPassword != password -> {
-                binding.inputConfirmPassword.error = "Password tidak cocok"
-                return
-            }
-            else -> {
-                binding.btnRegister.isEnabled = false
-                binding.btnRegister.text = "Mendaftarkan..."
-
-                auth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Log.d("RegisterActivity", "createUserWithEmail:success")
-                            val firebaseUser = auth.currentUser
-
-                            val profileUpdates = UserProfileChangeRequest.Builder()
-                                .setDisplayName(name)
-                                .build()
-
-                            firebaseUser?.updateProfile(profileUpdates)?.addOnCompleteListener {
-                                createUserDocumentInFirestore(firebaseUser.uid, name, email)
-                            }
-
-                        } else {
-                            Log.w("RegisterActivity", "createUserWithEmail:failure", task.exception)
-                            Snackbar.make(binding.root, "Registrasi gagal: ${task.exception?.message}", Snackbar.LENGTH_LONG).show()
-                            binding.btnRegister.isEnabled = true
-                            binding.btnRegister.text = "Daftar"
-                        }
-                    }
-            }
+        // Validasi, biar datanya bener
+        if (name.isEmpty()) {
+            binding.inputName.error = "Nama lengkap wajib diisi"
+            binding.inputName.requestFocus()
+            return
         }
+        if (username.length < 4) {
+            binding.inputUsername.error = "Username minimal 4 karakter"
+            binding.inputUsername.requestFocus()
+            return
+        }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.inputEmail.error = "Email tidak valid"
+            binding.inputEmail.requestFocus()
+            return
+        }
+        if (phone.length < 10) { // Anggep aja no HP minimal 10 digit
+            binding.inputPhone.error = "Nomor HP tidak valid"
+            binding.inputPhone.requestFocus()
+            return
+        }
+        if (password.length < 6) {
+            binding.inputPassword.error = "Password minimal 6 karakter"
+            binding.inputPassword.requestFocus()
+            return
+        }
+        if (confirmPassword != password) {
+            binding.inputConfirmPassword.error = "Password tidak cocok"
+            binding.inputConfirmPassword.requestFocus()
+            return
+        }
+
+        // Kalo semua validasi lolos, baru gaskeun
+        binding.btnRegister.isEnabled = false
+        binding.btnRegister.text = "Mendaftarkan..."
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("RegisterActivity", "createUserWithEmail:success")
+                    val firebaseUser = auth.currentUser
+                    val uid = firebaseUser?.uid
+
+                    if (uid == null) {
+                        // Ini jaga-jaga aja, harusnya ga mungkin null
+                        Snackbar.make(binding.root, "Registrasi gagal: UID tidak ditemukan", Snackbar.LENGTH_LONG).show()
+                        binding.btnRegister.isEnabled = true
+                        binding.btnRegister.text = "Daftar"
+                        return@addOnCompleteListener
+                    }
+
+                    // Update nama di profil Auth (biar muncul di 'Hi, Nama')
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(name)
+                        .build()
+                    firebaseUser.updateProfile(profileUpdates)
+
+                    // Simpen data lengkap user ke Firestore
+                    createUserDocumentInFirestore(uid, name, username, email, phone)
+
+                } else {
+                    // Kalo gagal bikin user (misal email udah ada)
+                    Log.w("RegisterActivity", "createUserWithEmail:failure", task.exception)
+                    Snackbar.make(binding.root, "Registrasi gagal: ${task.exception?.message}", Snackbar.LENGTH_LONG).show()
+                    binding.btnRegister.isEnabled = true
+                    binding.btnRegister.text = "Daftar"
+                }
+            }
     }
 
-    private fun createUserDocumentInFirestore(uid: String, name: String, email: String) {
+    private fun createUserDocumentInFirestore(uid: String, name: String, username: String, email: String, phone: String) {
+        // Siapin data user buat disimpen ke collection 'users'
         val userData = hashMapOf(
             "uid" to uid,
             "name" to name,
+            "username" to username, // Field baru
             "email" to email,
-            "phone" to "",
+            "phone" to phone,       // Field baru
             "location" to "",
             "profileImageUrl" to "",
-            "rating" to 4.7f
+            "rating" to 4.7f,
+            "wishlist" to emptyList<String>() // Bikin field wishlist kosong, penting
         )
 
-        // Simpan ke collection "users" dengan ID dokumen = UID user
         db.collection("users").document(uid)
             .set(userData)
             .addOnSuccessListener {
                 Log.d("RegisterActivity", "User document created in Firestore")
-
                 Snackbar.make(binding.root, "Registrasi berhasil — Selamat datang, $name!", Snackbar.LENGTH_SHORT).show()
+
+                // Berhasil, lempar ke MainActivity
                 val intent = Intent(this, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
             }
             .addOnFailureListener { e ->
+                // Kalo gagal simpen ke Firestore
                 Log.w("RegisterActivity", "Error creating user document", e)
                 Snackbar.make(binding.root, "Registrasi gagal (db): ${e.message}", Snackbar.LENGTH_LONG).show()
                 binding.btnRegister.isEnabled = true
                 binding.btnRegister.text = "Daftar"
+
+                // Hapus user Auth yg udah terlanjur dibuat, biar ga jadi sampah
+                auth.currentUser?.delete()
             }
     }
 }
