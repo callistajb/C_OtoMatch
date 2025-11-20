@@ -11,7 +11,6 @@ object FirestoreUploader {
         val collectionRef = db.collection("cars")
 
         for (car in cars) {
-            // Data ini sekarang LENGKAP dan BENAR
             val carData = hashMapOf(
                 "id" to car.id,
                 "name" to car.name,
@@ -20,7 +19,7 @@ object FirestoreUploader {
                 "price" to car.price,
                 "mileage" to car.mileage,
                 "location" to car.location,
-                "imageUrl" to car.imageUrl, // <-- DIPERBAIKI
+                "imageUrl" to car.imageUrl,
                 "sellerName" to car.sellerName,
                 "sellerContact" to car.sellerContact,
                 "bodyType" to car.bodyType,
@@ -30,7 +29,7 @@ object FirestoreUploader {
                 "kmRange" to car.kmRange,
                 "isWishlist" to car.isWishlist,
                 "isSold" to car.isSold,
-                "sellerUid" to car.sellerUid // <-- DIPERBAIKI
+                "sellerUid" to car.sellerUid
             )
 
             collectionRef.document("car_seed_${car.id}")

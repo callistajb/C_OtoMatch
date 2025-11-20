@@ -18,9 +18,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
-import com.cloudinary.android.MediaManager // IMPORT CLOUDINARY
+import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
-import com.cloudinary.android.callback.UploadCallback // IMPORT CLOUDINARY
+import com.cloudinary.android.callback.UploadCallback
 import com.example.c_otomatch.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -32,7 +32,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class EditProfileFragment : Fragment() {
 
-    private val CLOUD_NAME = "dqehqqz7q"
     private val UPLOAD_PRESET = "OtoMatch_preset"
 
     private lateinit var ivProfile: ImageView
@@ -50,6 +49,7 @@ class EditProfileFragment : Fragment() {
     private lateinit var db: FirebaseFirestore
     private lateinit var progressDialog: ProgressDialog
 
+    // ... (Launcher-launcher ini aman, biarin aja) ...
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent(),
         ActivityResultCallback { uri: Uri? ->
@@ -101,15 +101,12 @@ class EditProfileFragment : Fragment() {
     ): View {
         val v = inflater.inflate(R.layout.fragment_edit_profile, container, false)
 
-        // Inisialisasi Firebase
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
-        // Inisialisasi Cloudinary
-        val config = hashMapOf(
-            "cloud_name" to CLOUD_NAME
-        )
-        MediaManager.init(requireContext(), config)
+        // --- HAPUS INI (MediaManager.init) KARENA UDAH DI MyApplication ---
+        // MediaManager.init(requireContext(), hashMapOf("cloud_name" to CLOUD_NAME))
+        // ------------------------------------------------------------------
 
         progressDialog = ProgressDialog(requireContext()).apply {
             setTitle("Menyimpan...")
@@ -125,7 +122,9 @@ class EditProfileFragment : Fragment() {
         btnSaveProfile = v.findViewById(R.id.btnSaveProfile)
         btnUseMyLocation = v.findViewById(R.id.btnUseMyLocation)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
         loadProfile()
+
         ivProfile.setOnClickListener { showPhotoChooser() }
         btnChangePassword.setOnClickListener { showChangePasswordDialog() }
         btnSaveProfile.setOnClickListener {
@@ -159,6 +158,8 @@ class EditProfileFragment : Fragment() {
                 }
             }
     }
+
+    // ... (Fungsi showPhotoChooser, saveBitmap, showChangePasswordDialog TIDAK BERUBAH) ...
     private fun showPhotoChooser() {
         val options = arrayOf("Ambil Foto (Kamera)", "Pilih dari Galeri")
         AlertDialog.Builder(requireContext())
@@ -178,6 +179,7 @@ class EditProfileFragment : Fragment() {
             .setNegativeButton("Batal", null)
             .show()
     }
+
     private fun saveBitmapToMediaStore(bitmap: Bitmap): Uri? {
         val filename = "profile_${System.currentTimeMillis()}.jpg"
         val values = android.content.ContentValues().apply {
@@ -210,6 +212,7 @@ class EditProfileFragment : Fragment() {
         }
         return uri
     }
+
     private fun showChangePasswordDialog() {
         val user = auth.currentUser ?: return
         val view = LayoutInflater.from(requireContext())
@@ -259,7 +262,6 @@ class EditProfileFragment : Fragment() {
             .show()
     }
 
-
     private fun saveProfile() {
         val user = auth.currentUser
         if (user == null) {
@@ -269,33 +271,27 @@ class EditProfileFragment : Fragment() {
 
         progressDialog.show()
 
-        // Cek apakah user memilih foto baru
         if (currentPhotoUri != null) {
-            // Upload foto baru ke Cloudinary
             progressDialog.setMessage("Mengupload foto profil...")
             MediaManager.get().upload(currentPhotoUri!!)
                 .unsigned(UPLOAD_PRESET)
                 .callback(object : UploadCallback {
                     override fun onStart(requestId: String) {}
                     override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
-
                     override fun onSuccess(requestId: String, resultData: Map<*, *>) {
                         val downloadUrl = resultData["secure_url"] as String
                         progressDialog.setMessage("Menyimpan profil...")
                         updateUserDocument(user.uid, downloadUrl)
                     }
-
                     override fun onError(requestId: String, error: ErrorInfo) {
                         progressDialog.dismiss()
                         Toast.makeText(requireContext(), "Gagal upload foto: ${error.description}", Toast.LENGTH_SHORT).show()
                     }
-
                     override fun onReschedule(requestId: String, error: ErrorInfo) {}
                 })
                 .dispatch()
         } else {
-            // Update data teks saja (foto tidak berubah)
-            updateUserDocument(user.uid, existingPhotoUrl) // Gunakan URL foto lama
+            updateUserDocument(user.uid, existingPhotoUrl)
         }
     }
 

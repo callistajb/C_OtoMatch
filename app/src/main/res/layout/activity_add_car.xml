@@ -105,12 +105,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etSellerType"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                <AutoCompleteTextView
+                    android:id="@+id/actSellerType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Tipe Penjual (Individu/Diler)" />
+                    android:hint="Tipe Penjual"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <View
@@ -134,7 +135,7 @@
                     android:id="@+id/etBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_merek" />
+                    android:hint="Merek (Contoh: Honda)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -146,7 +147,7 @@
                     android:id="@+id/etModel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_model" />
+                    android:hint="Model (Contoh: Civic)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -158,7 +159,7 @@
                     android:id="@+id/etYear"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_tahun"
+                    android:hint="Tahun (wajib)"
                     android:inputType="number"
                     android:maxLength="4"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -185,7 +186,7 @@
                     android:id="@+id/etLocation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_lokasi" />
+                    android:hint="Lokasi (wajib)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -197,7 +198,7 @@
                     android:id="@+id/etColor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_warna" />
+                    android:hint="Warna (wajib)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <View
@@ -208,7 +209,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Spesifikasi (Opsional)"
+                android:text="Spesifikasi (Pilihan)"
                 android:textStyle="bold"
                 android:textColor="@color/blue"/>
 
@@ -228,36 +229,39 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etFuelType"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                <AutoCompleteTextView
+                    android:id="@+id/actFuelType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Bahan Bakar (Bensin / Diesel / Listrik)" />
+                    android:hint="Bahan Bakar"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etTransmission"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                <AutoCompleteTextView
+                    android:id="@+id/actTransmission"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Transmisi (Manual / Matic)" />
+                    android:hint="Transmisi"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etBodyType"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                <AutoCompleteTextView
+                    android:id="@+id/actBodyType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Tipe Bodi (SUV, Sedan, Hatchback, dll)" />
+                    android:hint="Tipe Bodi"
+                    android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -282,7 +286,7 @@
                     android:id="@+id/etNegatives"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_minus"
+                    android:hint="Minus / Kekurangan"
                     android:inputType="textMultiLine"
                     android:minLines="2"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -296,7 +300,7 @@
                     android:id="@+id/etMods"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_modif"
+                    android:hint="Modifikasi (Kalo ada)"
                     android:inputType="textMultiLine"
                     android:minLines="2"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -322,7 +326,7 @@
                     android:id="@+id/etPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/hint_harga"
+                    android:hint="Harga (Rp)"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -332,33 +336,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="@string/btn_generate" />
+                android:text="Bantu Saya Tentukan Harga" />
             <TextView
                 android:id="@+id/tvGeneratedPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"
-                android:text="@string/tv_harga_saran" />
-            <TextView
-                android:id="@+id/tvPriceWarning"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="4dp"
-                android:text="@string/tv_catatan"
-                android:textColor="@color/red" />
+                android:text="Saran Harga: -"
+                android:gravity="center"/>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/light_gray"
-                android:layout_marginVertical="16dp"/>
             <Button
                 android:id="@+id/btnSubmit"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="24dp"
                 android:layout_marginBottom="60dp"
-                android:text="@string/btn_submit" />
+                android:text="Posting Mobil Sekarang"
+                android:backgroundTint="@color/green"/>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

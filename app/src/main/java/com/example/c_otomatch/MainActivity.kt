@@ -43,6 +43,8 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+        //Ambil mobil dari Data (car seeder)
+        //FirestoreUploader.uploadCarsToFirestore(Data.carList)
 
         bottomNav = findViewById(R.id.bottomNavigation)
         imgLogo = findViewById(R.id.imgLogo)

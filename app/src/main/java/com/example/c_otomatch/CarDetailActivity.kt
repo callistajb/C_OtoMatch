@@ -115,7 +115,8 @@ class CarDetailActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             if (auth.currentUser == null) {
-                Toast.makeText(this, "Anda harus login untuk berkomentar", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Anda harus login untuk berkomentar", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
 
@@ -123,9 +124,11 @@ class CarDetailActivity : AppCompatActivity() {
                 commentText.isEmpty() -> {
                     binding.etCommentInput.error = "Tulis komentar dulu"
                 }
+
                 rating <= 0f -> {
                     Toast.makeText(this, "Beri rating minimal 1 bintang", Toast.LENGTH_SHORT).show()
                 }
+
                 else -> {
                     // Dapat nama user dari Firestore
                     db.collection("users").document(auth.currentUser!!.uid).get()
@@ -153,6 +156,41 @@ class CarDetailActivity : AppCompatActivity() {
                 val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$sellerContact"))
                 startActivity(dialIntent)
             }
+        }
+
+        // Logic Beli via WhatsApp
+        binding.btnWhatsapp.setOnClickListener {
+            if (sellerContact.isNotEmpty()) {
+                // Ganti 0 jadi 62 biar format internasional
+                var phone = sellerContact
+                if (phone.startsWith("0")) {
+                    phone = "62" + phone.substring(1)
+                }
+
+                // Pesan otomatis biar penjual tau buyer mau beli apa
+                val message = "Halo, saya tertarik dengan mobil $carName ($carYear) yang di iklan OtoMatch. Masih ada?"
+                val url = "https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}"
+
+                try {
+                    val i = Intent(Intent.ACTION_VIEW)
+                    i.data = Uri.parse(url)
+                    startActivity(i)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Yah, WhatsApp ga keinstall nih.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "Nomor penjual ga ada, aneh...", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Logic Share ke Sosmed
+        binding.btnShare.setOnClickListener {
+            val shareIntent = Intent(Intent.ACTION_SEND)
+            shareIntent.type = "text/plain"
+            val shareBody = "Cek deh mobil ini di OtoMatch: $carName ($carYear) - $carPrice. Lokasi: $carLocation"
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Jual $carName")
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareBody)
+            startActivity(Intent.createChooser(shareIntent, "Share ke temen lewat..."))
         }
     }
 

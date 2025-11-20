@@ -136,14 +136,12 @@ class SellFragment : Fragment() {
             .show()
     }
 
-    // --- ⬇️ INI FUNGSI BARU UNTUK EDIT ⬇️ ---
     // Buka SellCarActivity tapi kirim ID mobilnya
     private fun startEditCarActivity(car: Car) {
         val intent = Intent(requireContext(), SellCarActivity::class.java)
         intent.putExtra("EDIT_CAR_ID", car.documentId) // Kirim ID-nya
         addCarLauncher.launch(intent) // Pake launcher yg sama
     }
-    // --- ⬆️ SELESAI FUNGSI BARU ⬆️ ---
 
     // --- FUNGSI showEditCarDialog(car) SEKARANG DIHAPUS KARENA GA KEPAKE LAGI ---
 

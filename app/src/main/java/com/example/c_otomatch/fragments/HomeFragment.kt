@@ -177,7 +177,7 @@ class HomeFragment : Fragment() {
         applyFiltersAndSort() // Panggil fungsi filter utama
     }
 
-    // --- ⬇️ INI FUNGSI UTAMA UNTUK FILTER & SORT (CLIENT-SIDE) ⬇️ ---
+    // --- INI FUNGSI UTAMA UNTUK FILTER & SORT (CLIENT-SIDE)---
     private fun applyFiltersAndSort() {
 
         // 1. Selalu mulai dari data master (semua mobil yg 'isSold = false')
@@ -211,7 +211,9 @@ class HomeFragment : Fragment() {
             2 -> filteredList.sortedByDescending { safePriceToLong(it.price) } // Termahal
             // Kalo createdAt-nya null (data lama), pake tanggal 0 (paling lama)
             3 -> filteredList.sortedBy { it.createdAt ?: Date(0) } // Terlama
-            else -> filteredList.sortedByDescending { it.createdAt ?: Date(0) } // 0 = Terbaru (Default)
+            else -> filteredList.sortedByDescending {
+                it.createdAt ?: Date(0)
+            } // 0 = Terbaru (Default)
         }
 
         // 5. Baru update UI-nya
@@ -219,7 +221,6 @@ class HomeFragment : Fragment() {
         displayedCarList.addAll(sortedList)
         adapter.updateList(displayedCarList)
     }
-    // --- ⬆️ SELESAI FUNGSI ⬆️ ---
 
     private fun safePriceToLong(priceStr: String?): Long {
         if (priceStr.isNullOrBlank()) return 0L
