@@ -46,52 +46,39 @@ class SellCarActivity : AppCompatActivity() {
 
     private var editingCarId: String? = null
 
-    // --- Launcher Permissions ---
+    // ... (Launcher Permission code tetap sama) ...
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            takePhoto.launch(null)
-        } else {
-            Toast.makeText(this, "Izin kamera ditolak", Toast.LENGTH_SHORT).show()
-        }
+        if (isGranted) takePhoto.launch(null)
+        else Toast.makeText(this, "Izin kamera ditolak", Toast.LENGTH_SHORT).show()
     }
 
     private val requestStoragePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            pickGallery.launch("image/*")
-        } else {
-            Toast.makeText(this, "Izin galeri ditolak", Toast.LENGTH_SHORT).show()
+        if (isGranted) pickGallery.launch("image/*")
+        else Toast.makeText(this, "Izin galeri ditolak", Toast.LENGTH_SHORT).show()
+    }
+
+    private val pickGallery = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            imageUri = uri
+            binding.imgPreview.setImageURI(uri)
         }
     }
 
-    private val pickGallery =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            if (uri != null) {
-                imageUri = uri
-                binding.imgPreview.setImageURI(uri)
-            }
+    private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            imageUri = getImageUriFromBitmap(bitmap)
+            binding.imgPreview.setImageBitmap(bitmap)
         }
-
-    private val takePhoto =
-        registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
-            if (bitmap != null) {
-                imageUri = getImageUriFromBitmap(bitmap)
-                binding.imgPreview.setImageBitmap(bitmap)
-            }
-        }
+    }
 
     private fun getImageUriFromBitmap(bitmap: Bitmap): Uri? {
         val bytes = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-        val path = MediaStore.Images.Media.insertImage(
-            contentResolver,
-            bitmap,
-            "Title_${System.currentTimeMillis()}",
-            null
-        )
+        val path = MediaStore.Images.Media.insertImage(contentResolver, bitmap, "Title_${System.currentTimeMillis()}", null)
         return if (path != null) Uri.parse(path) else null
     }
 
@@ -109,15 +96,14 @@ class SellCarActivity : AppCompatActivity() {
             setCancelable(false)
         }
 
+        // Setup Dropdown Pilihan
         setupDropdowns()
 
         val toolbar = findViewById<Toolbar>(R.id.toolbarSellCar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-        toolbar.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         editingCarId = intent.getStringExtra("EDIT_CAR_ID")
 
@@ -149,37 +135,34 @@ class SellCarActivity : AppCompatActivity() {
                 val title = if (editingCarId != null) "Simpan Perubahan?" else "Posting Mobil?"
                 AlertDialog.Builder(this)
                     .setTitle(title)
-                    .setMessage("Yakin ingin melanjutkan?")
-                    .setPositiveButton("Ya") { _, _ ->
-                        uploadImageAndSaveCar()
-                    }
+                    .setMessage("Yakin data sudah benar?")
+                    .setPositiveButton("Ya") { _, _ -> uploadImageAndSaveCar() }
                     .setNegativeButton("Batal", null)
                     .show()
             }
         }
     }
 
+    // Fungsi setup Dropdown (Permintaan Pak Alex #2)
     private fun setupDropdowns() {
         val sellerTypes = arrayOf("Individu", "Diler")
         val fuelTypes = arrayOf("Bensin", "Diesel", "Listrik", "Hybrid")
         val transmissions = arrayOf("Manual", "Automatic", "CVT")
         val bodyTypes = arrayOf("SUV", "MPV", "Sedan", "Hatchback", "Coupe", "Van", "Pickup")
 
+        // Pastikan ID di XML nanti adalah AutoCompleteTextView, bukan EditText biasa
         binding.actSellerType.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sellerTypes))
         binding.actFuelType.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, fuelTypes))
         binding.actTransmission.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, transmissions))
-        // Ini kuncinya: ID di XML 'actBodyType' harus ada
         binding.actBodyType.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, bodyTypes))
     }
 
+    // ... (Fungsi checkCameraPermission, checkStoragePermission, loadUserData tetap sama) ...
     private fun checkCameraPermission() {
-        when {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
-                takePhoto.launch(null)
-            }
-            else -> {
-                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            takePhoto.launch(null)
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -189,13 +172,10 @@ class SellCarActivity : AppCompatActivity() {
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
-        when {
-            ContextCompat.checkSelfPermission(this, permissionToRequest) == PackageManager.PERMISSION_GRANTED -> {
-                pickGallery.launch("image/*")
-            }
-            else -> {
-                requestStoragePermissionLauncher.launch(permissionToRequest)
-            }
+        if (ContextCompat.checkSelfPermission(this, permissionToRequest) == PackageManager.PERMISSION_GRANTED) {
+            pickGallery.launch("image/*")
+        } else {
+            requestStoragePermissionLauncher.launch(permissionToRequest)
         }
     }
 
@@ -221,7 +201,6 @@ class SellCarActivity : AppCompatActivity() {
                 progressDialog.dismiss()
                 val car = document.toObject(Car::class.java)
                 if (car == null) {
-                    Toast.makeText(this, "Error: Data mobil tidak ditemukan.", Toast.LENGTH_LONG).show()
                     finish()
                     return@addOnSuccessListener
                 }
@@ -229,6 +208,7 @@ class SellCarActivity : AppCompatActivity() {
                 binding.etSellerName.setText(car.sellerName)
                 binding.etSellerContact.setText(car.sellerContact)
 
+                // Set value dropdown
                 binding.actSellerType.setText(car.sellerType, false)
                 binding.actFuelType.setText(car.fuel, false)
                 binding.actTransmission.setText(car.transmission, false)
@@ -236,7 +216,6 @@ class SellCarActivity : AppCompatActivity() {
 
                 binding.etBrand.setText(car.brand)
                 binding.etModel.setText(car.model)
-                // Pastikan ID ini ada di XML (etVariant)
                 binding.etVariant.setText(car.variant)
                 binding.etYear.setText(car.year.toString())
                 binding.etColor.setText(car.color)
@@ -259,10 +238,13 @@ class SellCarActivity : AppCompatActivity() {
     }
 
     private fun validateInputs(): Boolean {
-        if (imageUri == null && existingImageUrl.isNullOrEmpty()) return false
-        if (binding.etSellerName.text.isNullOrBlank()) return false
+        if (imageUri == null && existingImageUrl.isNullOrEmpty()) {
+            Toast.makeText(this, "Wajib upload foto mobil!", Toast.LENGTH_SHORT).show()
+            return false
+        }
         if (binding.etBrand.text.isNullOrBlank()) return false
         if (binding.etPrice.text.isNullOrBlank()) return false
+        // Tambahkan validasi lain sesuai kebutuhan
         return true
     }
 
@@ -277,11 +259,17 @@ class SellCarActivity : AppCompatActivity() {
         progressDialog.show()
 
         if (imageUri != null) {
+            progressDialog.setMessage("Mengupload gambar...")
             MediaManager.get().upload(imageUri!!).unsigned(UPLOAD_PRESET).callback(object : UploadCallback {
                 override fun onStart(requestId: String) {}
                 override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
                 override fun onSuccess(requestId: String, resultData: Map<*, *>) {
-                    val newImageUrl = resultData["secure_url"] as String
+                    // Fix URL http ke https
+                    var newImageUrl = resultData["secure_url"] as String
+                    if (newImageUrl.startsWith("http://")) {
+                        newImageUrl = newImageUrl.replace("http://", "https://")
+                    }
+                    Log.d("SellCarActivity", "URL Gambar Akhir: $newImageUrl")
                     saveData(newImageUrl)
                 }
                 override fun onError(requestId: String, error: ErrorInfo) {
@@ -312,6 +300,7 @@ class SellCarActivity : AppCompatActivity() {
             "sellerName" to binding.etSellerName.text.toString(),
             "sellerContact" to binding.etSellerContact.text.toString(),
 
+            // Ambil value dari Dropdown (AutoCompleteTextView)
             "sellerType" to binding.actSellerType.text.toString(),
             "fuel" to binding.actFuelType.text.toString(),
             "transmission" to binding.actTransmission.text.toString(),
@@ -328,6 +317,7 @@ class SellCarActivity : AppCompatActivity() {
             db.collection("cars").document(editingCarId!!).update(carDataMap)
                 .addOnSuccessListener {
                     progressDialog.dismiss()
+                    Toast.makeText(this, "Berhasil disimpan!", Toast.LENGTH_SHORT).show()
                     setResult(Activity.RESULT_OK)
                     finish()
                 }
@@ -335,11 +325,17 @@ class SellCarActivity : AppCompatActivity() {
             carDataMap["isSold"] = false
             carDataMap["sellerUid"] = auth.currentUser!!.uid
             carDataMap["createdAt"] = FieldValue.serverTimestamp()
+
             db.collection("cars").add(carDataMap)
                 .addOnSuccessListener {
                     progressDialog.dismiss()
+                    Toast.makeText(this, "Berhasil diposting!", Toast.LENGTH_SHORT).show()
                     setResult(Activity.RESULT_OK)
                     finish()
+                }
+                .addOnFailureListener {
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Gagal posting ke database.", Toast.LENGTH_SHORT).show()
                 }
         }
     }

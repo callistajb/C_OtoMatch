@@ -33,7 +33,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Gambar mobil + badge harga -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="220dp">
@@ -46,7 +45,6 @@
                     android:contentDescription="Gambar Mobil"
                     android:scaleType="centerCrop" />
 
-                <!-- Badge harga -->
                 <TextView
                     android:id="@+id/tvCarPriceBadge"
                     android:layout_width="wrap_content"
@@ -56,13 +54,12 @@
                     android:background="@drawable/price_badge_bg"
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="6dp"
-                    android:text="Rp 200.000.000"
+                    android:text="Rp -"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </FrameLayout>
 
-            <!-- Informasi umum -->
             <TextView
                 android:id="@+id/tvCarNameDetail"
                 android:layout_width="wrap_content"
@@ -85,16 +82,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Tahun: 2020" />
+                android:text="Tahun: -" />
 
             <TextView
                 android:id="@+id/tvCarLocationDetail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Lokasi: Tangerang" />
+                android:text="Lokasi: -" />
 
-            <!-- Spesifikasi -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -150,7 +146,6 @@
                 android:layout_marginTop="4dp"
                 android:text="Kapasitas Mesin: -" />
 
-            <!-- Info penjual -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -161,7 +156,7 @@
                 android:id="@+id/tvSellerDetail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Penjual: Callista"
+                android:text="Penjual: -"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -169,7 +164,7 @@
                 android:id="@+id/tvContactDetail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Kontak: 08123456789" />
+                android:text="Kontak: -" />
 
             <Button
                 android:id="@+id/btnContactSeller"
@@ -201,19 +196,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/accent_pink"
+                    android:backgroundTint="#FF4081"
                     android:text="Share" />
             </LinearLayout>
 
-
-            <!-- ==================== KOMENTAR & RATING ==================== -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginVertical="16dp"
                 android:background="#CCC" />
 
-            <!-- Average Rating -->
             <TextView
                 android:id="@+id/tvAvgRating"
                 android:layout_width="wrap_content"
@@ -231,7 +223,6 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <!-- Input komentar -->
             <RatingBar
                 android:id="@+id/ratingBarInput"
                 android:layout_width="wrap_content"

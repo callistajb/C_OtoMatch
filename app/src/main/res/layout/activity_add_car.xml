@@ -45,7 +45,6 @@
                 android:src="@drawable/ic_car"
                 android:background="@drawable/bg_image_border"
                 android:contentDescription="@string/desc_preview_mobil" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -135,9 +134,8 @@
                     android:id="@+id/etBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Merek (Contoh: Honda)" />
+                    android:hint="@string/hint_merek" />
             </com.google.android.material.textfield.TextInputLayout>
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -147,9 +145,8 @@
                     android:id="@+id/etModel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Model (Contoh: Civic)" />
+                    android:hint="@string/hint_model" />
             </com.google.android.material.textfield.TextInputLayout>
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -159,11 +156,9 @@
                     android:id="@+id/etYear"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Tahun (wajib)"
-                    android:inputType="number"
-                    android:maxLength="4"/>
+                    android:hint="@string/hint_tahun"
+                    android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -176,7 +171,6 @@
                     android:hint="Jarak Tempuh (km)"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -186,9 +180,8 @@
                     android:id="@+id/etLocation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Lokasi (wajib)" />
+                    android:hint="@string/hint_lokasi" />
             </com.google.android.material.textfield.TextInputLayout>
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -198,7 +191,7 @@
                     android:id="@+id/etColor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Warna (wajib)" />
+                    android:hint="@string/hint_warna" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <View
@@ -222,7 +215,7 @@
                     android:id="@+id/etVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Varian (misal RS, Sport, dll)" />
+                    android:hint="Varian (misal RS, Sport)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -286,7 +279,7 @@
                     android:id="@+id/etNegatives"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Minus / Kekurangan"
+                    android:hint="@string/hint_minus"
                     android:inputType="textMultiLine"
                     android:minLines="2"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -300,7 +293,7 @@
                     android:id="@+id/etMods"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Modifikasi (Kalo ada)"
+                    android:hint="@string/hint_modif"
                     android:inputType="textMultiLine"
                     android:minLines="2"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -326,7 +319,7 @@
                     android:id="@+id/etPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Harga (Rp)"
+                    android:hint="@string/hint_harga"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -336,23 +329,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Bantu Saya Tentukan Harga" />
+                android:text="@string/btn_generate" />
             <TextView
                 android:id="@+id/tvGeneratedPrice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"
-                android:text="Saran Harga: -"
-                android:gravity="center"/>
+                android:text="@string/tv_harga_saran" />
+            <TextView
+                android:id="@+id/tvPriceWarning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="4dp"
+                android:text="@string/tv_catatan"
+                android:textColor="@color/red" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/light_gray"
+                android:layout_marginVertical="16dp"/>
             <Button
                 android:id="@+id/btnSubmit"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="12dp"
                 android:layout_marginBottom="60dp"
-                android:text="Posting Mobil Sekarang"
-                android:backgroundTint="@color/green"/>
+                android:text="@string/btn_submit" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
