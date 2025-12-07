@@ -6,10 +6,12 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.core.content.ContextCompat
+import androidx.viewpager2.widget.ViewPager2 // PENTING: Import ini
 import com.bumptech.glide.Glide
 import com.example.c_otomatch.adapters.CommentAdapter
+import com.example.c_otomatch.adapters.ImageSliderAdapter // PENTING: Adapter Slider
 import com.example.c_otomatch.databinding.ActivityCarDetailBinding
+import com.example.c_otomatch.models.Car
 import com.example.c_otomatch.models.Comment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,7 +22,6 @@ class CarDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCarDetailBinding
     private lateinit var commentAdapter: CommentAdapter
     private val commentList = mutableListOf<Comment>()
-
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private var carDocumentId: String? = null
@@ -38,18 +39,20 @@ class CarDetailActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowHomeEnabled(true)
         binding.toolbarCarDetail.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        // Ambil Data
+        // --- 1. AMBIL DATA DARI INTENT (Agar Teks Muncul Instan) ---
         carDocumentId = intent.getStringExtra("car_document_id")
+
         val carName = intent.getStringExtra("car_name").orEmpty()
         val carBrand = intent.getStringExtra("car_brand").orEmpty()
         val carYear = intent.getIntExtra("car_year", 0)
         val carPrice = intent.getStringExtra("car_price").orEmpty()
-        val carImageUrl = intent.getStringExtra("car_image_url").orEmpty()
+        // Note: car_image_url dari intent cuma 1 foto (thumbnail), kita pakai ini sementara
+        val thumbUrl = intent.getStringExtra("car_image_url").orEmpty()
+
         val sellerContact = intent.getStringExtra("seller_contact").orEmpty()
         val carLocation = intent.getStringExtra("car_location").orEmpty()
         val sellerName = intent.getStringExtra("seller_name").orEmpty()
 
-        // Spek Detail
         val bodyType = intent.getStringExtra("body_type").orEmpty()
         val color = intent.getStringExtra("color").orEmpty()
         val transmission = intent.getStringExtra("transmission").orEmpty()
@@ -58,14 +61,7 @@ class CarDetailActivity : AppCompatActivity() {
         val variant = intent.getStringExtra("variant").orEmpty()
         val capacity = intent.getStringExtra("capacity").orEmpty()
 
-        // Load Gambar
-        Glide.with(this)
-            .load(carImageUrl)
-            .placeholder(R.drawable.ic_car)
-            .error(R.drawable.ic_car)
-            .into(binding.imgCarDetail)
-
-        // Bind Text
+        // --- 2. BIND TEXT KE UI ---
         binding.apply {
             tvCarNameDetail.text = carName
             tvCarBrandDetail.text = carBrand
@@ -84,46 +80,100 @@ class CarDetailActivity : AppCompatActivity() {
             tvCapacityDetail.text = "Kapasitas Mesin: ${capacity.ifEmpty { "-" }}"
         }
 
+        // --- 3. SETUP SLIDER GAMBAR (PERBAIKAN UTAMA) ---
+        // Kita panggil fungsi khusus untuk setup slider
+        // Kita kirim 'thumbUrl' sebagai cadangan jika loading database lama/gagal
+        setupImageSlider(thumbUrl)
+
+        // --- 4. LOAD DATA LENGKAP DARI FIRESTORE ---
+        // Kenapa load lagi? Karena Intent mungkin tidak membawa LIST semua foto (imageUrls)
+        // Kita butuh array 'imageUrls' untuk slider yang lengkap.
+        if (carDocumentId != null) {
+            db.collection("cars").document(carDocumentId!!).get()
+                .addOnSuccessListener { document ->
+                    val car = document.toObject(Car::class.java)
+                    if (car != null) {
+                        // Update Slider dengan List Foto Lengkap dari Database
+                        updateSliderWithFullData(car)
+                    }
+                }
+        }
+
         setupComments()
+        setupActionButtons(sellerContact, carName, carYear, carPrice, carLocation)
+    } // <--- KURUNG TUTUP onCreate (Disini letak kesalahan sebelumnya)
 
-        // --- FITUR WA & SHARE ---
+    // --- FUNGSI-FUNGSI DI BAWAH INI HARUS DI LUAR onCreate ---
 
-        // 1. Tombol Kontak (Telp Biasa)
+    // Fungsi Setup Slider Awal (Pakai 1 foto dari Intent dulu biar gak kosong)
+    private fun setupImageSlider(thumbnailUrl: String) {
+        val initialList = if (thumbnailUrl.isNotEmpty()) listOf(thumbnailUrl) else emptyList()
+        val adapter = ImageSliderAdapter(initialList)
+        binding.vpDetailImages.adapter = adapter
+
+        if (initialList.isNotEmpty()) {
+            binding.tvImageCount.text = "1/1"
+        } else {
+            binding.tvImageCount.text = "0/0"
+        }
+    }
+
+    // Fungsi Update Slider (Setelah data lengkap dari Firestore didapat)
+    private fun updateSliderWithFullData(car: Car) {
+        // Prioritas: Pakai imageUrls (banyak), kalau kosong pakai imageUrl (satu)
+        val images = if (car.imageUrls.isNotEmpty()) car.imageUrls else listOf(car.imageUrl)
+
+        // Cek validitas list
+        if (images.isNotEmpty() && images[0].isNotEmpty()) {
+            val adapter = ImageSliderAdapter(images)
+            binding.vpDetailImages.adapter = adapter
+
+            // Set text indikator awal
+            binding.tvImageCount.text = "1/${images.size}"
+
+            // Listener untuk update indikator (contoh: 1/5 -> 2/5) saat digeser
+            binding.vpDetailImages.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    super.onPageSelected(position)
+                    binding.tvImageCount.text = "${position + 1}/${images.size}"
+                }
+            })
+        }
+    }
+
+    private fun setupActionButtons(contact: String, name: String, year: Int, price: String, location: String) {
         binding.btnContactSeller.setOnClickListener {
-            if (sellerContact.isNotEmpty()) {
-                startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$sellerContact")))
+            if (contact.isNotEmpty()) {
+                startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$contact")))
             } else {
                 Toast.makeText(this, "Nomor tidak tersedia", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // 2. Tombol Beli via WA (Checkout)
         binding.btnWhatsapp.setOnClickListener {
-            if (sellerContact.isNotEmpty()) {
-                var phone = sellerContact
-                // Ubah 08xxx jadi 628xxx
+            if (contact.isNotEmpty()) {
+                var phone = contact
                 if (phone.startsWith("0")) phone = "62" + phone.substring(1)
 
-                val message = "Halo, saya tertarik dengan mobil *$carName ($carYear)* seharga *$carPrice* yang ada di OtoMatch. Masih ada?"
+                val message = "Halo, saya tertarik dengan mobil *$name ($year)* seharga *$price* di OtoMatch."
                 val url = "https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(message)}"
 
                 try {
-                    val i = Intent(Intent.ACTION_VIEW)
-                    i.data = Uri.parse(url)
-                    startActivity(i)
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 } catch (e: Exception) {
-                    Toast.makeText(this, "WhatsApp belum terinstall", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "WhatsApp error", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        // 3. Tombol Share
         binding.btnShare.setOnClickListener {
-            val shareIntent = Intent(Intent.ACTION_SEND)
-            shareIntent.type = "text/plain"
-            val body = "Cek mobil ini di OtoMatch!\n\n$carName ($carYear)\nHarga: $carPrice\nLokasi: $carLocation"
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Jual $carName")
-            shareIntent.putExtra(Intent.EXTRA_TEXT, body)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(
+                    Intent.EXTRA_TEXT,
+                    "Cek mobil $name seharga $price di lokasi $location via OtoMatch!"
+                )
+            }
             startActivity(Intent.createChooser(shareIntent, "Share via"))
         }
     }

@@ -32,7 +32,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class EditProfileFragment : Fragment() {
 
-    private val UPLOAD_PRESET = "OtoMatch_preset"
+    private val UPLOAD_PRESET = "OtoMatch_Preset"
 
     private lateinit var ivProfile: ImageView
     private lateinit var etName: EditText
@@ -49,7 +49,6 @@ class EditProfileFragment : Fragment() {
     private lateinit var db: FirebaseFirestore
     private lateinit var progressDialog: ProgressDialog
 
-    // ... (Launcher-launcher ini aman, biarin aja) ...
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent(),
         ActivityResultCallback { uri: Uri? ->

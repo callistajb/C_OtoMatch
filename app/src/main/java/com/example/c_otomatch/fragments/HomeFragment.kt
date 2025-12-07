@@ -10,13 +10,12 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.c_otomatch.CarDetailActivity
-import com.example.c_otomatch.ComparisonActivity // Pastikan ini tidak merah
+import com.example.c_otomatch.ComparisonActivity
 import com.example.c_otomatch.R
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.models.Car
@@ -32,8 +31,6 @@ class HomeFragment : Fragment() {
     private lateinit var adapter: CarAdapter
     private val allCarsList = mutableListOf<Car>()
     private val displayedCarList = mutableListOf<Car>()
-
-    // List untuk menyimpan mobil yang dipilih user
     private val selectedCarsForCompare = mutableListOf<Car>()
 
     private lateinit var db: FirebaseFirestore
@@ -42,11 +39,12 @@ class HomeFragment : Fragment() {
 
     private lateinit var spinnerSort: Spinner
     private lateinit var switchMyCars: SwitchCompat
-    private lateinit var btnCompareFloating: Button // Tombol melayang
+    private lateinit var btnCompareFloating: Button
     private var currentSearchQuery: String = ""
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
@@ -55,13 +53,11 @@ class HomeFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.rvCars)
         btnCompareFloating = view.findViewById(R.id.btnCompareFloating)
-
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         adapter = CarAdapter(
             displayedCarList,
             { car ->
-                // Klik Item -> Ke Detail
                 val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
                     putExtra("car_document_id", car.documentId)
                     putExtra("car_name", car.name)
@@ -84,13 +80,10 @@ class HomeFragment : Fragment() {
                 }
                 startActivity(intent)
             },
-            {}, // Tombol sold ga dipake di home
+            {},
             isSellFragment = false,
-
-            // LOGIC CHECKBOX
             onCompareChecked = { car, isChecked ->
                 if (isChecked) {
-                    // Cegah duplikasi data yang sama
                     if (!selectedCarsForCompare.any { it.documentId == car.documentId }) {
                         selectedCarsForCompare.add(car)
                     }
@@ -122,19 +115,24 @@ class HomeFragment : Fragment() {
         switchMyCars = view.findViewById(R.id.switchMyCars)
         switchMyCars.setOnCheckedChangeListener { _, _ -> applyFiltersAndSort() }
 
-        // KLIK TOMBOL BANDINGKAN
         btnCompareFloating.setOnClickListener {
             if (selectedCarsForCompare.size == 2) {
-                val intent = Intent(requireContext(), ComparisonActivity::class.java)
-                // Kirim Document ID (String) ke Activity sebelah
-                intent.putExtra("CAR_ID_1", selectedCarsForCompare[0].documentId)
-                intent.putExtra("CAR_ID_2", selectedCarsForCompare[1].documentId)
-                startActivity(intent)
+                val car1Id = selectedCarsForCompare[0].documentId
+                val car2Id = selectedCarsForCompare[1].documentId
 
-                // Reset pilihan setelah dibandingin
-                adapter.clearSelection()
-                selectedCarsForCompare.clear()
-                updateCompareButton()
+                // CEK SAFETY: Jangan biarkan ID kosong dikirim
+                if (car1Id.isNotEmpty() && car2Id.isNotEmpty()) {
+                    val intent = Intent(requireContext(), ComparisonActivity::class.java)
+                    intent.putExtra("CAR_ID_1", car1Id)
+                    intent.putExtra("CAR_ID_2", car2Id)
+                    startActivity(intent)
+
+                    adapter.clearSelection()
+                    selectedCarsForCompare.clear()
+                    updateCompareButton()
+                } else {
+                    android.widget.Toast.makeText(context, "Data mobil tidak valid (ID Kosong)", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -153,7 +151,6 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         loadCarsFromFirestore()
-        // Reset selection pas balik ke home biar ga bingung
         selectedCarsForCompare.clear()
         adapter.clearSelection()
         updateCompareButton()
@@ -165,9 +162,13 @@ class HomeFragment : Fragment() {
             for (document in result) {
                 try {
                     val car = document.toObject(Car::class.java)
-                    car.documentId = document.id // PENTING: ID dokumen harus disimpan
+                    // --- BAGIAN TERPENTING: SIMPAN ID DOKUMEN ---
+                    car.documentId = document.id
+                    // --------------------------------------------
                     allCarsList.add(car)
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    Log.e("HomeFragment", "Error converting car", e)
+                }
             }
             applyFiltersAndSort()
             spinnerSort.setSelection(0, false)
@@ -181,10 +182,12 @@ class HomeFragment : Fragment() {
 
     private fun applyFiltersAndSort() {
         var filteredList = allCarsList.toMutableList()
+
         if (switchMyCars.isChecked) {
             val user = auth.currentUser
             if (user != null) filteredList = filteredList.filter { it.sellerUid == user.uid }.toMutableList()
         }
+
         if (currentSearchQuery.isNotEmpty()) {
             val q = currentSearchQuery.lowercase()
             filteredList = filteredList.filter { car ->
@@ -193,6 +196,7 @@ class HomeFragment : Fragment() {
                         car.bodyType.lowercase().contains(q) || car.color.lowercase().contains(q)
             }.toMutableList()
         }
+
         val sortPosition = spinnerSort.selectedItemPosition
         val sortedList = when (sortPosition) {
             1 -> filteredList.sortedBy { safePriceToLong(it.price) }
@@ -200,6 +204,7 @@ class HomeFragment : Fragment() {
             3 -> filteredList.sortedBy { it.createdAt ?: Date(0) }
             else -> filteredList.sortedByDescending { it.createdAt ?: Date(0) }
         }
+
         displayedCarList.clear()
         displayedCarList.addAll(sortedList)
         adapter.updateList(displayedCarList)
