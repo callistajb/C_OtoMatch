@@ -55,6 +55,7 @@ class WishlistFragment : Fragment() {
                     putExtra("car_price", car.price)
                     putExtra("car_mileage", car.mileage)
                     putExtra("car_location", car.location)
+                    val img = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
                     putExtra("car_image_url", car.imageUrl)
                     putExtra("seller_name", car.sellerName)
                     putExtra("seller_contact", car.sellerContact)
@@ -89,7 +90,7 @@ class WishlistFragment : Fragment() {
 
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { document ->
-                if (document == null || !document.exists()) {
+                if (document != null && document.exists()) {
                     Log.w("WishlistFragment", "User document not found")
                     showEmpty(true)
                     return@addOnSuccessListener

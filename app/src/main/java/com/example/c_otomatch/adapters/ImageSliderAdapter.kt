@@ -31,6 +31,7 @@ class ImageSliderAdapter(private val images: List<Any>) :
         Glide.with(holder.itemView.context)
             .load(images[position])
             .placeholder(R.drawable.ic_car)
+            .override(500,500)
             .into(holder.imageView)
     }
 

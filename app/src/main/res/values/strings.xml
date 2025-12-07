@@ -29,6 +29,7 @@
     <string name="location">Location</string>
     <string name="fuel">Fuel</string>
     <string name="km">KM</string>
-
+    <string name="photo_count_format">%d Foto dipilih</string>
+    <string name="price_suggestion_format">Harga saran: %s</string>
 
 </resources>

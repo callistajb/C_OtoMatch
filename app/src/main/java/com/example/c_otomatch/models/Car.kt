@@ -1,6 +1,7 @@
 package com.example.c_otomatch.models
 
 import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
@@ -12,16 +13,25 @@ data class Car(
     var brand: String = "",
     var model: String = "",
     var year: Int = 2000,
-    var price: String = "",
-    var mileage: String = "",
+    var price: String = "0",
+    var mileage: String = "0 km",
     var location: String = "",
 
-    // --- UPDATE DI SINI ---
-    var imageUrl: String = "", // Foto utama (Thumbnail)
-    var imageUrls: List<String> = emptyList(), // List semua foto untuk slider
-    // ----------------------
+    // --- PERBAIKAN: Tambah @PropertyName di sini ---
+    @get:PropertyName("imageUrl") @set:PropertyName("imageUrl")
+    var imageUrl: String = "",
 
+    @get:PropertyName("imageUrls") @set:PropertyName("imageUrls")
+    var imageUrls: List<String> = ArrayList(),
+
+    // WAJIB: Tambahkan ini agar status Sold terbaca benar dari database
+    @get:PropertyName("isSold") @set:PropertyName("isSold")
     var isSold: Boolean = false,
+    // --------------------------------------------------
+
+    @get:Exclude
+    var isWishlist: Boolean = false, // Lokal variabel untuk UI
+
     var sellerName: String = "",
     var sellerContact: String = "",
     var sellerType: String = "",
@@ -35,10 +45,9 @@ data class Car(
     var variant: String = "",
     var negatives: String = "",
     var mods: String = "",
+    var kmRange: String = "",
 
     @ServerTimestamp
     val createdAt: Date? = null,
-    var isWishlist: Boolean = false,
-    var id: Int = 0,
-    var kmRange: String = ""
+    var id: Int = 0
 )

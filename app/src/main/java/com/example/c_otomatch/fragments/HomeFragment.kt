@@ -6,10 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.Spinner
+import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,11 +32,12 @@ class HomeFragment : Fragment() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
-    private var isSortInitialized = false
 
     private lateinit var spinnerSort: Spinner
     private lateinit var switchMyCars: SwitchCompat
     private lateinit var btnCompareFloating: Button
+
+    private var isSortInitialized = false
     private var currentSearchQuery: String = ""
 
     override fun onCreateView(
@@ -53,11 +51,14 @@ class HomeFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.rvCars)
         btnCompareFloating = view.findViewById(R.id.btnCompareFloating)
+        spinnerSort = view.findViewById(R.id.spinnerSort)
+        switchMyCars = view.findViewById(R.id.switchMyCars)
+
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         adapter = CarAdapter(
             displayedCarList,
-            { car ->
+            onItemClicked = { car ->
                 val intent = Intent(requireContext(), CarDetailActivity::class.java).apply {
                     putExtra("car_document_id", car.documentId)
                     putExtra("car_name", car.name)
@@ -66,7 +67,8 @@ class HomeFragment : Fragment() {
                     putExtra("car_price", car.price)
                     putExtra("car_mileage", car.mileage)
                     putExtra("car_location", car.location)
-                    putExtra("car_image_url", car.imageUrl)
+                    val img = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
+                    putExtra("car_image_url", img)
                     putExtra("seller_name", car.sellerName)
                     putExtra("seller_contact", car.sellerContact)
                     putExtra("body_type", car.bodyType)
@@ -80,11 +82,11 @@ class HomeFragment : Fragment() {
                 }
                 startActivity(intent)
             },
-            {},
+            onMarkSoldClicked = {},
             isSellFragment = false,
             onCompareChecked = { car, isChecked ->
                 if (isChecked) {
-                    if (!selectedCarsForCompare.any { it.documentId == car.documentId }) {
+                    if (selectedCarsForCompare.none { it.documentId == car.documentId }) {
                         selectedCarsForCompare.add(car)
                     }
                 } else {
@@ -95,7 +97,7 @@ class HomeFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
-        spinnerSort = view.findViewById(R.id.spinnerSort)
+        // Setup Spinner
         val sortOptions = listOf("Urutkan: Terbaru", "Termurah", "Termahal", "Terlama")
         val sortAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sortOptions)
         sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -112,67 +114,68 @@ class HomeFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        switchMyCars = view.findViewById(R.id.switchMyCars)
         switchMyCars.setOnCheckedChangeListener { _, _ -> applyFiltersAndSort() }
 
         btnCompareFloating.setOnClickListener {
             if (selectedCarsForCompare.size == 2) {
-                val car1Id = selectedCarsForCompare[0].documentId
-                val car2Id = selectedCarsForCompare[1].documentId
+                val intent = Intent(requireContext(), ComparisonActivity::class.java)
+                intent.putExtra("CAR_ID_1", selectedCarsForCompare[0].documentId)
+                intent.putExtra("CAR_ID_2", selectedCarsForCompare[1].documentId)
+                startActivity(intent)
 
-                // CEK SAFETY: Jangan biarkan ID kosong dikirim
-                if (car1Id.isNotEmpty() && car2Id.isNotEmpty()) {
-                    val intent = Intent(requireContext(), ComparisonActivity::class.java)
-                    intent.putExtra("CAR_ID_1", car1Id)
-                    intent.putExtra("CAR_ID_2", car2Id)
-                    startActivity(intent)
-
-                    adapter.clearSelection()
-                    selectedCarsForCompare.clear()
-                    updateCompareButton()
-                } else {
-                    android.widget.Toast.makeText(context, "Data mobil tidak valid (ID Kosong)", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                adapter.clearSelection()
+                selectedCarsForCompare.clear()
+                updateCompareButton()
             }
         }
 
         return view
     }
 
-    private fun updateCompareButton() {
-        if (selectedCarsForCompare.size == 2) {
-            btnCompareFloating.visibility = View.VISIBLE
-            btnCompareFloating.text = "Bandingkan (${selectedCarsForCompare.size}/2)"
-        } else {
-            btnCompareFloating.visibility = View.GONE
-        }
-    }
-
     override fun onResume() {
         super.onResume()
+        // LOAD WISHLIST DULU BARU LOAD CARS
+        loadUserWishlist()
         loadCarsFromFirestore()
+
         selectedCarsForCompare.clear()
         adapter.clearSelection()
         updateCompareButton()
     }
 
-    private fun loadCarsFromFirestore() {
-        db.collection("cars").whereEqualTo("isSold", false).get(Source.SERVER).addOnSuccessListener { result ->
-            allCarsList.clear()
-            for (document in result) {
-                try {
-                    val car = document.toObject(Car::class.java)
-                    // --- BAGIAN TERPENTING: SIMPAN ID DOKUMEN ---
-                    car.documentId = document.id
-                    // --------------------------------------------
-                    allCarsList.add(car)
-                } catch (e: Exception) {
-                    Log.e("HomeFragment", "Error converting car", e)
+    // --- FUNGSI BARU: Ambil data Wishlist User ---
+    private fun loadUserWishlist() {
+        val user = auth.currentUser ?: return
+        db.collection("users").document(user.uid).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val wishlist = document.get("wishlist") as? List<String> ?: emptyList()
+                    // Kirim list ID ke adapter
+                    adapter.updateWishlist(wishlist)
                 }
             }
-            applyFiltersAndSort()
-            spinnerSort.setSelection(0, false)
-        }
+    }
+
+    private fun loadCarsFromFirestore() {
+        db.collection("cars")
+            .whereEqualTo("isSold", false) // Hanya ambil yang BELUM terjual
+            .get(Source.SERVER)
+            .addOnSuccessListener { result ->
+                allCarsList.clear()
+                for (document in result) {
+                    try {
+                        val car = document.toObject(Car::class.java)
+                        car.documentId = document.id // Pastikan ID tersimpan
+                        allCarsList.add(car)
+                    } catch (e: Exception) {
+                        Log.e("HomeFragment", "Error parsing car", e)
+                    }
+                }
+                applyFiltersAndSort()
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Gagal memuat data", Toast.LENGTH_SHORT).show()
+            }
     }
 
     fun filterCars(query: String) {
@@ -181,24 +184,25 @@ class HomeFragment : Fragment() {
     }
 
     private fun applyFiltersAndSort() {
-        var filteredList = allCarsList.toMutableList()
+        var filteredList = allCarsList.toList()
 
         if (switchMyCars.isChecked) {
             val user = auth.currentUser
-            if (user != null) filteredList = filteredList.filter { it.sellerUid == user.uid }.toMutableList()
+            if (user != null) {
+                filteredList = filteredList.filter { it.sellerUid == user.uid }
+            }
         }
 
         if (currentSearchQuery.isNotEmpty()) {
             val q = currentSearchQuery.lowercase()
             filteredList = filteredList.filter { car ->
-                car.name.lowercase().contains(q) || car.brand.lowercase().contains(q) ||
-                        car.transmission.lowercase().contains(q) || car.fuel.lowercase().contains(q) ||
-                        car.bodyType.lowercase().contains(q) || car.color.lowercase().contains(q)
-            }.toMutableList()
+                car.name.lowercase().contains(q) ||
+                        car.brand.lowercase().contains(q) ||
+                        car.model.lowercase().contains(q)
+            }
         }
 
-        val sortPosition = spinnerSort.selectedItemPosition
-        val sortedList = when (sortPosition) {
+        val sortedList = when (spinnerSort.selectedItemPosition) {
             1 -> filteredList.sortedBy { safePriceToLong(it.price) }
             2 -> filteredList.sortedByDescending { safePriceToLong(it.price) }
             3 -> filteredList.sortedBy { it.createdAt ?: Date(0) }
@@ -210,9 +214,21 @@ class HomeFragment : Fragment() {
         adapter.updateList(displayedCarList)
     }
 
+    private fun updateCompareButton() {
+        if (selectedCarsForCompare.size == 2) {
+            btnCompareFloating.visibility = View.VISIBLE
+            btnCompareFloating.text = "Bandingkan (${selectedCarsForCompare.size}/2)"
+        } else {
+            btnCompareFloating.visibility = View.GONE
+        }
+    }
+
     private fun safePriceToLong(priceStr: String?): Long {
         if (priceStr.isNullOrBlank()) return 0L
-        val digits = NumberTextWatcher.cleanDigits(priceStr)
-        return digits.toLongOrNull() ?: 0L
+        return try {
+            NumberTextWatcher.cleanDigits(priceStr).toLongOrNull() ?: 0L
+        } catch (e: Exception) {
+            0L
+        }
     }
 }
