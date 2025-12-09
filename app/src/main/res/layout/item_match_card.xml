@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="12dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="@android:color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/imgCard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_car"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:background="@drawable/gradient_bottom"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:id="@+id/tvCardName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nama Mobil"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:shadowColor="#80000000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="4"/>
+
+            <TextView
+                android:id="@+id/tvCardPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rp 0"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#4CAF50"
+                android:layout_marginTop="4dp"
+                android:background="#E6000000"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"/>
+
+            <TextView
+                android:id="@+id/tvCardDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="2021 • Matic"
+                android:textColor="#DDDDDD"
+                android:layout_marginTop="6dp"/>
+
+            <TextView
+                android:id="@+id/tvCardLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📍 Lokasi"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp"/>
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/left_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#99FF0000"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_close"
+                android:layout_gravity="center"
+                app:tint="@color/white"/>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/right_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#9900FF00"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_wishlist"
+                android:layout_gravity="center"
+                app:tint="@color/white"/>
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Simulasi Kredit"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etDownPayment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Uang Muka (DP)"
+            android:inputType="number" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <AutoCompleteTextView
+            android:id="@+id/actTenor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Jangka Waktu (Tenor)"
+            android:inputType="none"
+            android:focusable="false"
+            android:cursorVisible="false" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/tvMonthlyResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Estimasi Cicilan:\nRp -"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="@color/green"
+        android:gravity="center"/>
+
+    <Button
+        android:id="@+id/btnCalculate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Hitung Estimasi"
+        android:backgroundTint="@color/blue"/>
+</LinearLayout>

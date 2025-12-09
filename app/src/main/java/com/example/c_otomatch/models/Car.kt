@@ -17,20 +17,17 @@ data class Car(
     var mileage: String = "0 km",
     var location: String = "",
 
-    // --- PERBAIKAN: Tambah @PropertyName di sini ---
     @get:PropertyName("imageUrl") @set:PropertyName("imageUrl")
     var imageUrl: String = "",
 
     @get:PropertyName("imageUrls") @set:PropertyName("imageUrls")
     var imageUrls: List<String> = ArrayList(),
 
-    // WAJIB: Tambahkan ini agar status Sold terbaca benar dari database
     @get:PropertyName("isSold") @set:PropertyName("isSold")
     var isSold: Boolean = false,
-    // --------------------------------------------------
 
     @get:Exclude
-    var isWishlist: Boolean = false, // Lokal variabel untuk UI
+    var isWishlist: Boolean = false,
 
     var sellerName: String = "",
     var sellerContact: String = "",
@@ -38,7 +35,13 @@ data class Car(
     var sellerUid: String = "",
 
     var bodyType: String = "",
+
+    // Kategori Warna (misal: "Merah") - Untuk Filter
     var color: String = "",
+
+    // Nama Warna Unik (misal: "Soul Red Crystal") - Untuk Tampilan
+    var exactColor: String = "",
+
     var transmission: String = "",
     var fuel: String = "",
     var capacity: String = "",

@@ -2,26 +2,21 @@ package com.example.c_otomatch
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
+import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.Gravity
+import android.provider.MediaStore
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
@@ -30,13 +25,10 @@ import com.example.c_otomatch.adapters.ImageSliderAdapter
 import com.example.c_otomatch.databinding.ActivityAddCarBinding
 import com.example.c_otomatch.models.Car
 import com.example.c_otomatch.utils.NumberTextWatcher
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.ByteArrayOutputStream
 
 class SellCarActivity : AppCompatActivity() {
 
@@ -48,9 +40,7 @@ class SellCarActivity : AppCompatActivity() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
-
-    // Ganti ProgressDialog dengan AlertDialog
-    private lateinit var loadingDialog: AlertDialog
+    private lateinit var progressDialog: ProgressDialog
     private var editingCarId: String? = null
 
     private val pickMultipleImages = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
@@ -62,13 +52,10 @@ class SellCarActivity : AppCompatActivity() {
 
     private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
         if (bitmap != null) {
-            // Gunakan fungsi save ke cache (lebih aman dan modern)
-            val uri = saveBitmapToCache(this, bitmap)
+            val uri = getImageUriFromBitmap(bitmap)
             if (uri != null) {
                 selectedImageUris.add(uri)
                 updateImagesPreview()
-            } else {
-                Toast.makeText(this, "Gagal menyimpan gambar", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -91,8 +78,10 @@ class SellCarActivity : AppCompatActivity() {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
-        setupLoadingDialog()
-
+        progressDialog = ProgressDialog(this).apply {
+            setCancelable(false)
+            setMessage("Loading...")
+        }
         setSupportActionBar(binding.toolbarSellCar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbarSellCar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
@@ -106,6 +95,8 @@ class SellCarActivity : AppCompatActivity() {
             binding.btnSubmit.text = "Simpan Perubahan"
             loadCarDataToEdit(editingCarId!!)
         } else {
+            binding.toolbarSellCar.title = "Jual Mobil"
+            binding.btnSubmit.text = "Submit & Post"
             loadUserData()
         }
 
@@ -117,15 +108,19 @@ class SellCarActivity : AppCompatActivity() {
         binding.btnCamera.setOnClickListener { checkCameraPermission() }
 
         binding.btnGeneratePrice.setOnClickListener {
-            generatePriceSuggestion()
+            val year = binding.etYear.text.toString().toIntOrNull() ?: 2020
+            val base = if (year >= 2020) 200_000_000 else 100_000_000
+            val suggestion = "Rp %,d".format(base)
+            binding.tvGeneratedPrice.text = "Harga saran: $suggestion"
+            binding.etPrice.setText(suggestion.replace(Regex("[^0-9]"), ""))
         }
 
         binding.btnSubmit.setOnClickListener {
             if (validateInputs()) {
-                val message = if (editingCarId != null) "Simpan perubahan?" else "Posting mobil?"
+                val title = if (editingCarId != null) "Simpan Perubahan?" else "Posting Mobil?"
                 AlertDialog.Builder(this)
-                    .setTitle("Konfirmasi")
-                    .setMessage(message)
+                    .setTitle(title)
+                    .setMessage("Yakin data sudah benar?")
                     .setPositiveButton("Ya") { _, _ ->
                         if (selectedImageUris.isNotEmpty()) {
                             uploadedImageUrls.clear()
@@ -140,57 +135,6 @@ class SellCarActivity : AppCompatActivity() {
         }
     }
 
-    // --- SETUP LOADING DIALOG PENGGANTI PROGRESSDIALOG ---
-    private fun setupLoadingDialog() {
-        val llPadding = 30
-        val ll = LinearLayout(this)
-        ll.orientation = LinearLayout.HORIZONTAL
-        ll.setPadding(llPadding, llPadding, llPadding, llPadding)
-        ll.gravity = Gravity.CENTER
-        var llParam = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        llParam.gravity = Gravity.CENTER
-        ll.layoutParams = llParam
-
-        val progressBar = ProgressBar(this)
-        progressBar.isIndeterminate = true
-        progressBar.setPadding(0, 0, llPadding, 0)
-        progressBar.layoutParams = llParam
-
-        llParam = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        llParam.gravity = Gravity.CENTER
-        val tvText = TextView(this)
-        tvText.text = "Loading..."
-        tvText.setTextColor(ContextCompat.getColor(this, android.R.color.black))
-        tvText.textSize = 16f
-        tvText.layoutParams = llParam
-
-        ll.addView(progressBar)
-        ll.addView(tvText)
-
-        val builder = AlertDialog.Builder(this)
-        builder.setCancelable(false)
-        builder.setView(ll)
-
-        loadingDialog = builder.create()
-    }
-
-    private fun showLoading(message: String) {
-        // Karena kita pakai custom view sederhana, kita set title saja atau biarkan default "Loading..."
-        loadingDialog.setTitle(message)
-        if (!loadingDialog.isShowing) loadingDialog.show()
-    }
-
-    private fun hideLoading() {
-        if (loadingDialog.isShowing) loadingDialog.dismiss()
-    }
-    // ----------------------------------------------------
-
     private fun updateImagesPreview() {
         val displayList = mutableListOf<Any>()
         displayList.addAll(existingImageUrls)
@@ -198,7 +142,7 @@ class SellCarActivity : AppCompatActivity() {
 
         val adapter = ImageSliderAdapter(displayList)
         binding.rvSelectedImages.adapter = adapter
-        binding.tvPhotoCount.text = getString(R.string.photo_count_format, displayList.size)
+        binding.tvPhotoCount.text = "${displayList.size} Foto dipilih"
         binding.tvPhotoCount.visibility = View.VISIBLE
     }
 
@@ -211,7 +155,8 @@ class SellCarActivity : AppCompatActivity() {
             return
         }
 
-        showLoading("Mengupload foto ${index + 1}/${selectedImageUris.size}...")
+        progressDialog.setMessage("Mengupload foto ke-${index + 1} dari ${selectedImageUris.size}...")
+        progressDialog.show()
 
         MediaManager.get().upload(selectedImageUris[index])
             .unsigned(UPLOAD_PRESET)
@@ -225,139 +170,146 @@ class SellCarActivity : AppCompatActivity() {
                     uploadImagesRecursive(index + 1)
                 }
                 override fun onError(requestId: String, error: ErrorInfo) {
-                    hideLoading()
+                    progressDialog.dismiss()
                     Toast.makeText(this@SellCarActivity, "Gagal upload: ${error.description}", Toast.LENGTH_SHORT).show()
                 }
                 override fun onReschedule(requestId: String, error: ErrorInfo) {}
             }).dispatch()
     }
 
-    private fun saveData(imageUrls: List<String>) {
-        showLoading("Menyimpan data...")
+    private fun saveData(finalImageUrls: List<String>) {
+        progressDialog.setMessage("Menyimpan data...")
 
-        val priceRaw = NumberTextWatcher.cleanDigits(binding.etPrice.text.toString())
-        val mileageRaw = NumberTextWatcher.cleanDigits(binding.etMileage.text.toString())
-        val capacityRaw = NumberTextWatcher.cleanDigits(binding.etCapacity.text.toString())
+        val priceString = NumberTextWatcher.cleanDigits(binding.etPrice.text.toString())
+        val mileageString = NumberTextWatcher.cleanDigits(binding.etMileage.text.toString())
+        val capacityString = NumberTextWatcher.cleanDigits(binding.etCapacity.text.toString())
 
-        val carData = hashMapOf<String, Any>(
+        val colorCategory = binding.actColorCategory.text.toString()
+        var colorSpecific = binding.etExactColor.text.toString()
+        if (colorSpecific.isBlank()) colorSpecific = colorCategory
+
+        val carDataMap = hashMapOf<String, Any>(
             "name" to "${binding.etBrand.text} ${binding.etModel.text}",
             "brand" to binding.etBrand.text.toString(),
             "model" to binding.etModel.text.toString(),
-            "year" to (binding.etYear.text.toString().toIntOrNull() ?: 0),
-            "price" to NumberTextWatcher.formatToRupiah(priceRaw.toLongOrNull() ?: 0),
-            "mileage" to NumberTextWatcher.formatToKm(mileageRaw.toLongOrNull() ?: 0),
-            "capacity" to NumberTextWatcher.formatToCc(capacityRaw.toLongOrNull() ?: 0),
+            "year" to (binding.etYear.text.toString().toIntOrNull() ?: 2020),
+            "price" to NumberTextWatcher.formatToRupiah(priceString.toLongOrNull() ?: 0),
+            "mileage" to NumberTextWatcher.formatToKm(mileageString.toLongOrNull() ?: 0),
             "location" to binding.etLocation.text.toString(),
-            "color" to binding.etColor.text.toString(),
-            "variant" to binding.etVariant.text.toString(),
-            "fuel" to binding.actFuelType.text.toString(),
-            "transmission" to binding.actTransmission.text.toString(),
-            "bodyType" to binding.actBodyType.text.toString(),
+
+            "color" to colorCategory,
+            "exactColor" to colorSpecific,
+
+            "imageUrls" to finalImageUrls,
+            "imageUrl" to (finalImageUrls.firstOrNull() ?: ""),
+
             "sellerName" to binding.etSellerName.text.toString(),
             "sellerContact" to binding.etSellerContact.text.toString(),
             "sellerType" to binding.actSellerType.text.toString(),
+            "fuel" to binding.actFuelType.text.toString(),
+            "transmission" to binding.actTransmission.text.toString(),
+            "bodyType" to binding.actBodyType.text.toString(),
+            "capacity" to if (capacityString.isEmpty()) "" else NumberTextWatcher.formatToCc(capacityString.toLongOrNull() ?: 0),
+            "variant" to binding.etVariant.text.toString(),
             "negatives" to binding.etNegatives.text.toString(),
-            "mods" to binding.etMods.text.toString(),
-            "imageUrls" to imageUrls,
-            "imageUrl" to (imageUrls.firstOrNull() ?: "")
+            "mods" to binding.etMods.text.toString()
         )
 
         if (editingCarId != null) {
-            db.collection("cars").document(editingCarId!!)
-                .update(carData)
+            db.collection("cars").document(editingCarId!!).update(carDataMap)
                 .addOnSuccessListener {
-                    hideLoading()
-                    Toast.makeText(this, "Berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Berhasil disimpan!", Toast.LENGTH_SHORT).show()
                     setResult(Activity.RESULT_OK)
                     finish()
                 }
                 .addOnFailureListener {
-                    hideLoading()
+                    progressDialog.dismiss()
                     Toast.makeText(this, "Gagal update: ${it.message}", Toast.LENGTH_SHORT).show()
                 }
         } else {
-            carData["isSold"] = false
-            carData["createdAt"] = FieldValue.serverTimestamp()
-            carData["sellerUid"] = auth.currentUser?.uid ?: ""
+            carDataMap["isSold"] = false
+            carDataMap["sellerUid"] = auth.currentUser!!.uid
+            carDataMap["createdAt"] = FieldValue.serverTimestamp()
 
-            db.collection("cars").add(carData)
+            db.collection("cars").add(carDataMap)
                 .addOnSuccessListener {
-                    hideLoading()
+                    progressDialog.dismiss()
                     Toast.makeText(this, "Berhasil diposting!", Toast.LENGTH_SHORT).show()
                     setResult(Activity.RESULT_OK)
                     finish()
                 }
                 .addOnFailureListener {
-                    hideLoading()
+                    progressDialog.dismiss()
                     Toast.makeText(this, "Gagal posting: ${it.message}", Toast.LENGTH_SHORT).show()
                 }
         }
     }
 
     private fun loadCarDataToEdit(carId: String) {
-        showLoading("Memuat data...")
-        db.collection("cars").document(carId).get().addOnSuccessListener { doc ->
-            hideLoading()
-            val car = doc.toObject(Car::class.java)
-            if (car != null) {
-                binding.etBrand.setText(car.brand)
-                binding.etModel.setText(car.model)
-                binding.etYear.setText(car.year.toString())
-                binding.etPrice.setText(NumberTextWatcher.cleanDigits(car.price))
-                binding.etMileage.setText(NumberTextWatcher.cleanDigits(car.mileage))
-                binding.etLocation.setText(car.location)
-                binding.etColor.setText(car.color)
-                binding.etVariant.setText(car.variant)
-                binding.etCapacity.setText(NumberTextWatcher.cleanDigits(car.capacity))
-                binding.etSellerName.setText(car.sellerName)
-                binding.etSellerContact.setText(car.sellerContact)
-                binding.etNegatives.setText(car.negatives)
-                binding.etMods.setText(car.mods)
+        progressDialog.setMessage("Memuat data...")
+        progressDialog.show()
+        db.collection("cars").document(carId).get().addOnSuccessListener { document ->
+            progressDialog.dismiss()
+            val car = document.toObject(Car::class.java)
+            if (car == null) { finish(); return@addOnSuccessListener }
 
-                binding.actFuelType.setText(car.fuel, false)
-                binding.actTransmission.setText(car.transmission, false)
-                binding.actBodyType.setText(car.bodyType, false)
-                binding.actSellerType.setText(car.sellerType, false)
+            binding.etSellerName.setText(car.sellerName)
+            binding.etSellerContact.setText(car.sellerContact)
+            binding.actSellerType.setText(car.sellerType, false)
+            binding.etBrand.setText(car.brand)
+            binding.etModel.setText(car.model)
+            binding.etYear.setText(car.year.toString())
+            binding.etMileage.setText(NumberTextWatcher.cleanDigits(car.mileage))
+            binding.etLocation.setText(car.location)
 
-                existingImageUrls.clear()
-                if (car.imageUrls.isNotEmpty()) {
-                    existingImageUrls.addAll(car.imageUrls)
-                } else if (car.imageUrl.isNotEmpty()) {
-                    existingImageUrls.add(car.imageUrl)
-                }
-                updateImagesPreview()
+            binding.actColorCategory.setText(car.color, false)
+            binding.etExactColor.setText(car.exactColor)
+
+            binding.etVariant.setText(car.variant)
+            binding.actFuelType.setText(car.fuel, false)
+            binding.actTransmission.setText(car.transmission, false)
+            binding.actBodyType.setText(car.bodyType, false)
+            binding.etCapacity.setText(NumberTextWatcher.cleanDigits(car.capacity))
+            binding.etNegatives.setText(car.negatives)
+            binding.etMods.setText(car.mods)
+            binding.etPrice.setText(NumberTextWatcher.cleanDigits(car.price))
+
+            existingImageUrls.clear()
+            if (car.imageUrls.isNotEmpty()) {
+                existingImageUrls.addAll(car.imageUrls)
+            } else if (car.imageUrl.isNotEmpty()) {
+                existingImageUrls.add(car.imageUrl)
             }
+            updateImagesPreview()
         }
     }
 
     private fun validateInputs(): Boolean {
         if (selectedImageUris.isEmpty() && existingImageUrls.isEmpty()) {
-            Toast.makeText(this, "Minimal upload 1 foto!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Wajib upload minimal 1 foto!", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (binding.etBrand.text.isNullOrBlank() || binding.etPrice.text.isNullOrBlank()) {
-            Toast.makeText(this, "Merek dan Harga wajib diisi!", Toast.LENGTH_SHORT).show()
+        if (binding.etBrand.text.isNullOrBlank()) {
+            binding.etBrand.error = "Wajib diisi"
+            return false
+        }
+        if (binding.etPrice.text.isNullOrBlank()) {
+            binding.etPrice.error = "Wajib diisi"
+            return false
+        }
+        if (binding.actColorCategory.text.isNullOrBlank()) {
+            binding.actColorCategory.error = "Wajib pilih kategori"
             return false
         }
         return true
     }
 
-    // Fungsi pengganti MediaStore.insertImage (Menyimpan ke Cache App)
-    private fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri? {
-        val cachePath = File(context.cacheDir, "images")
-        cachePath.mkdirs()
-        return try {
-            val stream = FileOutputStream("$cachePath/image_${System.currentTimeMillis()}.jpg")
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-            stream.close()
-            val imageFile = File(cachePath, "image_${System.currentTimeMillis()}.jpg")
-            // Menggunakan FileProvider untuk keamanan (pastikan provider ada di Manifest, atau gunakan Uri.fromFile untuk internal use simple)
-            // Untuk simplifikasi internal app use, Uri.fromFile sudah cukup jika tidak dishare ke app lain
-            Uri.fromFile(imageFile)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        }
+    private fun getImageUriFromBitmap(bitmap: Bitmap): Uri? {
+        val bytes = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path = MediaStore.Images.Media.insertImage(contentResolver, bitmap, "Title_${System.currentTimeMillis()}", null)
+        return Uri.parse(path)
     }
 
     private fun checkCameraPermission() {
@@ -396,18 +348,19 @@ class SellCarActivity : AppCompatActivity() {
         val transmissions = arrayOf("Manual", "Automatic", "CVT")
         val bodyTypes = arrayOf("SUV", "MPV", "Sedan", "Hatchback", "Coupe", "Van", "Pickup")
 
-        binding.actSellerType.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sellerTypes))
-        binding.actFuelType.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, fuelTypes))
-        binding.actTransmission.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, transmissions))
-        binding.actBodyType.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, bodyTypes))
+        val colorCategories = arrayOf("Hitam", "Putih", "Silver", "Abu-abu", "Merah", "Biru", "Hijau", "Kuning", "Coklat", "Oranye", "Gold", "Ungu", "Lainnya")
+
+        // GANTI KE SIMPLE_LIST_ITEM_1
+        binding.actSellerType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, sellerTypes))
+        binding.actFuelType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, fuelTypes))
+        binding.actTransmission.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, transmissions))
+        binding.actBodyType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, bodyTypes))
+        binding.actColorCategory.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, colorCategories))
     }
 
-    // Fungsi generate harga dipanggil via tombol
-    private fun generatePriceSuggestion() {
+    private fun generatePriceSuggestion(): String {
         val year = binding.etYear.text.toString().toIntOrNull() ?: 2020
         val base = if (year >= 2020) 200_000_000 else 100_000_000
-        val suggestion = "Rp %,d".format(base)
-        binding.tvGeneratedPrice.text = getString(R.string.price_suggestion_format, suggestion)
-        binding.etPrice.setText(suggestion.replace(Regex("[^0-9]"), ""))
+        return "Rp %,d".format(base)
     }
 }

@@ -129,7 +129,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Tipe Penjual"
-                    android:inputType="none" />
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:cursorVisible="false"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <View
@@ -155,6 +157,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Merek (wajib)" />
             </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -166,6 +169,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Model / Tipe" />
             </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -178,6 +182,7 @@
                     android:hint="Tahun"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -190,6 +195,7 @@
                     android:hint="Jarak Tempuh (km)"
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -201,17 +207,42 @@
                     android:layout_height="wrap_content"
                     android:hint="Lokasi" />
             </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etColor"
-                    android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Warna" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                    <AutoCompleteTextView
+                        android:id="@+id/actColorCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Kategori Warna"
+                        android:inputType="none"
+                        android:focusable="false"
+                        android:cursorVisible="false"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etExactColor"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Warna Spesifik (Opsional)" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -247,7 +278,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Bahan Bakar"
-                    android:inputType="none" />
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:cursorVisible="false" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -260,7 +293,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Transmisi"
-                    android:inputType="none" />
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:cursorVisible="false" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -273,7 +308,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Tipe Bodi"
-                    android:inputType="none" />
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:cursorVisible="false" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout

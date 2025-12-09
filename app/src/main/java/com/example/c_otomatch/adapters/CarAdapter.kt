@@ -8,7 +8,6 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -24,21 +23,15 @@ class CarAdapter(
     private var carList: List<Car>,
     private val onItemClicked: (Car) -> Unit,
     private val onMarkSoldClicked: (Car) -> Unit,
-    private val isSellFragment: Boolean = false,
-    private val onCompareChecked: ((Car, Boolean) -> Unit)? = null
+    private val isSellFragment: Boolean = false
 ) : RecyclerView.Adapter<CarAdapter.CarViewHolder>() {
 
-    // List untuk menyimpan ID mobil yang sedang dibandingkan
-    private val selectedForComparison = mutableListOf<String>()
-
-    // List untuk menyimpan ID mobil yang ada di wishlist user (Sinkronisasi Home)
     private val userWishlistIds = mutableListOf<String>()
 
-    // Fungsi untuk update data wishlist dari Fragment ke Adapter
     fun updateWishlist(newWishlistIds: List<String>) {
         userWishlistIds.clear()
         userWishlistIds.addAll(newWishlistIds)
-        notifyDataSetChanged() // Refresh UI agar hati merah/putih sesuai
+        notifyDataSetChanged()
     }
 
     inner class CarViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -59,8 +52,6 @@ class CarAdapter(
 
     override fun onBindViewHolder(holder: CarViewHolder, position: Int) {
         val car = carList[position]
-
-        // 1. Load Gambar (Safe Load)
         val imageToLoad = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
         Glide.with(holder.itemView.context)
             .load(imageToLoad)
@@ -70,15 +61,11 @@ class CarAdapter(
             .diskCacheStrategy(DiskCacheStrategy.ALL)
             .into(holder.imgCar)
 
-        // 2. Set Text
         holder.tvCarName.text = car.name
         holder.tvCarBrand.text = car.brand
         holder.tvCarPrice.text = formatPrice(car.price)
 
-        // 3. Logika Wishlist (SINKRONISASI DIPERBAIKI)
-        // Cek apakah ID mobil ini ada di daftar wishlist user
         val isWishlisted = userWishlistIds.contains(car.documentId)
-        // Update visual hati berdasarkan data real
         car.isWishlist = isWishlisted
 
         holder.btnFavorite.setImageResource(
@@ -88,13 +75,12 @@ class CarAdapter(
         holder.btnFavorite.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
-                Toast.makeText(holder.itemView.context, "Login dulu!", Toast.LENGTH_SHORT).show()
+                // --- BAHASA LEBIH ELEGAN ---
+                Toast.makeText(holder.itemView.context, "Silakan login untuk menyimpan ke Wishlist.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             animateButton(holder.btnFavorite)
-
-            // Toggle local state sementara
             val willBeWishlist = !userWishlistIds.contains(car.documentId)
 
             if (willBeWishlist) {
@@ -105,75 +91,33 @@ class CarAdapter(
                 holder.btnFavorite.setImageResource(R.drawable.ic_wishlist_border)
             }
 
-            // Update Database
             val db = FirebaseFirestore.getInstance()
             val userDocRef = db.collection("users").document(user.uid)
 
             if (car.documentId.isNotEmpty()) {
-                if (willBeWishlist) {
-                    userDocRef.update("wishlist", FieldValue.arrayUnion(car.documentId))
-                } else {
-                    userDocRef.update("wishlist", FieldValue.arrayRemove(car.documentId))
-                }
+                if (willBeWishlist) userDocRef.update("wishlist", FieldValue.arrayUnion(car.documentId))
+                else userDocRef.update("wishlist", FieldValue.arrayRemove(car.documentId))
             }
         }
 
-        // 4. Label SOLD OUT (Untuk Home)
         holder.tvSoldLabel.visibility = if (car.isSold) View.VISIBLE else View.GONE
-
-        // Klik Item Mobil -> Buka Detail
         holder.itemView.setOnClickListener { onItemClicked(car) }
 
-        // 5. Logika Khusus per Fragment (Jual vs Home)
-        if (isSellFragment) {
-            // --- TAMPILAN DI HALAMAN JUAL ---
-            holder.btnMarkSold.visibility = View.VISIBLE
-            holder.cbCompare.visibility = View.GONE
+        holder.cbCompare.visibility = View.GONE
 
-            // Logika text tombol Mark Sold
+        if (isSellFragment) {
+            holder.btnMarkSold.visibility = View.VISIBLE
             if (car.isSold) {
                 holder.btnMarkSold.text = "TERJUAL"
-                holder.btnMarkSold.alpha = 0.5f // Agak transparan kalau terjual
+                holder.btnMarkSold.alpha = 0.5f
             } else {
                 holder.btnMarkSold.text = "Tandai TERJUAL"
-                holder.btnMarkSold.alpha = 1f
+                holder.btnMarkSold.alpha = 1.0f
             }
-
-            holder.btnMarkSold.setOnClickListener {
-                onMarkSoldClicked(car)
-            }
+            holder.btnMarkSold.setOnClickListener { onMarkSoldClicked(car) }
         } else {
-            // --- TAMPILAN DI HALAMAN HOME ---
             holder.btnMarkSold.visibility = View.GONE
-            holder.cbCompare.visibility = View.VISIBLE
-
-            holder.cbCompare.setOnCheckedChangeListener(null)
-            holder.cbCompare.isChecked = selectedForComparison.contains(car.documentId)
-
-            holder.cbCompare.setOnCheckedChangeListener { buttonView, isChecked ->
-                if (buttonView.isPressed) {
-                    if (isChecked) {
-                        if (selectedForComparison.size >= 2) {
-                            Toast.makeText(holder.itemView.context, "Maksimal 2 mobil!", Toast.LENGTH_SHORT).show()
-                            holder.cbCompare.isChecked = false
-                        } else {
-                            if (!selectedForComparison.contains(car.documentId)) {
-                                selectedForComparison.add(car.documentId)
-                                onCompareChecked?.invoke(car, true)
-                            }
-                        }
-                    } else {
-                        selectedForComparison.remove(car.documentId)
-                        onCompareChecked?.invoke(car, false)
-                    }
-                }
-            }
         }
-    }
-
-    fun clearSelection() {
-        selectedForComparison.clear()
-        notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int = carList.size
@@ -189,17 +133,13 @@ class CarAdapter(
             val value = price.replace(Regex("[^0-9]"), "").toLong()
             val formatted = NumberFormat.getNumberInstance(Locale("id", "ID")).format(value)
             "Rp $formatted"
-        } catch (e: Exception) {
-            price
-        }
+        } catch (e: Exception) { price }
     }
 
     private fun animateButton(view: View) {
-        val anim = ScaleAnimation(
-            0.8f, 1f, 0.8f, 1f,
-            ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
-            ScaleAnimation.RELATIVE_TO_SELF, 0.5f
-        ).apply { duration = 150 }
+        val anim = ScaleAnimation(0.8f, 1f, 0.8f, 1f,
+            ScaleAnimation.RELATIVE_TO_SELF, 0.5f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f)
+        anim.duration = 150
         view.startAnimation(anim)
     }
 }

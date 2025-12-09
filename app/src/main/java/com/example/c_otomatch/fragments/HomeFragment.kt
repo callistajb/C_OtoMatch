@@ -1,8 +1,8 @@
 package com.example.c_otomatch.fragments
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,11 +12,12 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.c_otomatch.CarDetailActivity
-import com.example.c_otomatch.ComparisonActivity
+import com.example.c_otomatch.MatchActivity
 import com.example.c_otomatch.R
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.models.Car
 import com.example.c_otomatch.utils.NumberTextWatcher
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -28,14 +29,13 @@ class HomeFragment : Fragment() {
     private lateinit var adapter: CarAdapter
     private val allCarsList = mutableListOf<Car>()
     private val displayedCarList = mutableListOf<Car>()
-    private val selectedCarsForCompare = mutableListOf<Car>()
 
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
     private lateinit var spinnerSort: Spinner
     private lateinit var switchMyCars: SwitchCompat
-    private lateinit var btnCompareFloating: Button
+    private lateinit var btnMatchmaker: ExtendedFloatingActionButton
 
     private var isSortInitialized = false
     private var currentSearchQuery: String = ""
@@ -50,7 +50,7 @@ class HomeFragment : Fragment() {
         auth = FirebaseAuth.getInstance()
 
         recyclerView = view.findViewById(R.id.rvCars)
-        btnCompareFloating = view.findViewById(R.id.btnCompareFloating)
+        btnMatchmaker = view.findViewById(R.id.btnMatchmaker)
         spinnerSort = view.findViewById(R.id.spinnerSort)
         switchMyCars = view.findViewById(R.id.switchMyCars)
 
@@ -73,6 +73,7 @@ class HomeFragment : Fragment() {
                     putExtra("seller_contact", car.sellerContact)
                     putExtra("body_type", car.bodyType)
                     putExtra("color", car.color)
+                    putExtra("exactColor", car.exactColor)
                     putExtra("transmission", car.transmission)
                     putExtra("fuel", car.fuel)
                     putExtra("variant", car.variant)
@@ -83,50 +84,16 @@ class HomeFragment : Fragment() {
                 startActivity(intent)
             },
             onMarkSoldClicked = {},
-            isSellFragment = false,
-            onCompareChecked = { car, isChecked ->
-                if (isChecked) {
-                    if (selectedCarsForCompare.none { it.documentId == car.documentId }) {
-                        selectedCarsForCompare.add(car)
-                    }
-                } else {
-                    selectedCarsForCompare.removeAll { it.documentId == car.documentId }
-                }
-                updateCompareButton()
-            }
+            isSellFragment = false
         )
         recyclerView.adapter = adapter
 
-        // Setup Spinner
-        val sortOptions = listOf("Urutkan: Terbaru", "Termurah", "Termahal", "Terlama")
-        val sortAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sortOptions)
-        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerSort.adapter = sortAdapter
-
-        spinnerSort.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, v: View?, position: Int, id: Long) {
-                if (!isSortInitialized) {
-                    isSortInitialized = true
-                    return
-                }
-                applyFiltersAndSort()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-
+        setupSortSpinner()
         switchMyCars.setOnCheckedChangeListener { _, _ -> applyFiltersAndSort() }
 
-        btnCompareFloating.setOnClickListener {
-            if (selectedCarsForCompare.size == 2) {
-                val intent = Intent(requireContext(), ComparisonActivity::class.java)
-                intent.putExtra("CAR_ID_1", selectedCarsForCompare[0].documentId)
-                intent.putExtra("CAR_ID_2", selectedCarsForCompare[1].documentId)
-                startActivity(intent)
-
-                adapter.clearSelection()
-                selectedCarsForCompare.clear()
-                updateCompareButton()
-            }
+        // --- BUKA DIALOG FILTER DULU ---
+        btnMatchmaker.setOnClickListener {
+            showMatchmakerDialog()
         }
 
         return view
@@ -134,23 +101,48 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // LOAD WISHLIST DULU BARU LOAD CARS
         loadUserWishlist()
         loadCarsFromFirestore()
-
-        selectedCarsForCompare.clear()
-        adapter.clearSelection()
-        updateCompareButton()
     }
 
-    // --- FUNGSI BARU: Ambil data Wishlist User ---
+    private fun showMatchmakerDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_matchmaker, null)
+        val actBudget = dialogView.findViewById<AutoCompleteTextView>(R.id.actBudget)
+        val actType = dialogView.findViewById<AutoCompleteTextView>(R.id.actType)
+        val btnFind = dialogView.findViewById<Button>(R.id.btnFindMatch)
+
+        val budgets = listOf("Di bawah 200 Juta", "200 - 500 Juta", "Di atas 500 Juta", "Tampilkan Semua")
+        val types = listOf("SUV", "Sedan", "MPV", "Hatchback", "Tampilkan Semua")
+
+        actBudget.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, budgets))
+        actType.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, types))
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        btnFind.setOnClickListener {
+            val selectedBudget = actBudget.text.toString()
+            val selectedType = actType.text.toString()
+
+            // --- LEMPAR DATA FILTER KE MATCH ACTIVITY ---
+            val intent = Intent(requireContext(), MatchActivity::class.java)
+            intent.putExtra("FILTER_BUDGET", selectedBudget)
+            intent.putExtra("FILTER_TYPE", selectedType)
+            startActivity(intent)
+
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
     private fun loadUserWishlist() {
         val user = auth.currentUser ?: return
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
                     val wishlist = document.get("wishlist") as? List<String> ?: emptyList()
-                    // Kirim list ID ke adapter
                     adapter.updateWishlist(wishlist)
                 }
             }
@@ -158,23 +150,18 @@ class HomeFragment : Fragment() {
 
     private fun loadCarsFromFirestore() {
         db.collection("cars")
-            .whereEqualTo("isSold", false) // Hanya ambil yang BELUM terjual
+            .whereEqualTo("isSold", false)
             .get(Source.SERVER)
             .addOnSuccessListener { result ->
                 allCarsList.clear()
                 for (document in result) {
                     try {
                         val car = document.toObject(Car::class.java)
-                        car.documentId = document.id // Pastikan ID tersimpan
+                        car.documentId = document.id
                         allCarsList.add(car)
-                    } catch (e: Exception) {
-                        Log.e("HomeFragment", "Error parsing car", e)
-                    }
+                    } catch (e: Exception) { }
                 }
                 applyFiltersAndSort()
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "Gagal memuat data", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -214,21 +201,29 @@ class HomeFragment : Fragment() {
         adapter.updateList(displayedCarList)
     }
 
-    private fun updateCompareButton() {
-        if (selectedCarsForCompare.size == 2) {
-            btnCompareFloating.visibility = View.VISIBLE
-            btnCompareFloating.text = "Bandingkan (${selectedCarsForCompare.size}/2)"
-        } else {
-            btnCompareFloating.visibility = View.GONE
+    private fun setupSortSpinner() {
+        val sortOptions = listOf("Urutkan: Terbaru", "Termurah", "Termahal", "Terlama")
+        val sortAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sortOptions)
+        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerSort.adapter = sortAdapter
+
+        spinnerSort.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, v: View?, position: Int, id: Long) {
+                if (!isSortInitialized) {
+                    isSortInitialized = true
+                    return
+                }
+                applyFiltersAndSort()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
     private fun safePriceToLong(priceStr: String?): Long {
-        if (priceStr.isNullOrBlank()) return 0L
+        val safeString = priceStr ?: ""
+        if (safeString.isBlank()) return 0L
         return try {
-            NumberTextWatcher.cleanDigits(priceStr).toLongOrNull() ?: 0L
-        } catch (e: Exception) {
-            0L
-        }
+            NumberTextWatcher.cleanDigits(safeString).toLongOrNull() ?: 0L
+        } catch (e: Exception) { 0L }
     }
 }

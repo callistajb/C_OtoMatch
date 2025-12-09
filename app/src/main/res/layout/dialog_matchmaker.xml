@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pencarian Spesifik"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Temukan mobil impian yang sesuai dengan anggaran dan preferensi Anda."
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <AutoCompleteTextView
+            android:id="@+id/actBudget"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Rentang Harga"
+            android:inputType="none"
+            android:focusable="false"
+            android:cursorVisible="false" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <AutoCompleteTextView
+            android:id="@+id/actType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Jenis Mobil"
+            android:inputType="none"
+            android:focusable="false"
+            android:cursorVisible="false" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btnFindMatch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Terapkan Filter"
+        android:backgroundTint="@color/accent_pink"/>
+</LinearLayout>
