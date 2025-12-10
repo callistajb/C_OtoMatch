@@ -8,15 +8,15 @@ import android.os.Bundle
 import android.content.Intent
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater // IMPORT BARU
-import android.widget.ArrayAdapter // IMPORT BARU
-import android.widget.AutoCompleteTextView // IMPORT BARU
-import android.widget.Button // IMPORT BARU
+import android.view.LayoutInflater
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton // IMPORT BARU
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog // IMPORT BARU
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import android.view.View
