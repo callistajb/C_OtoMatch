@@ -35,7 +35,6 @@ class HomeFragment : Fragment() {
 
     private lateinit var spinnerSort: Spinner
     private lateinit var switchMyCars: SwitchCompat
-    private lateinit var btnMatchmaker: ExtendedFloatingActionButton
 
     private var isSortInitialized = false
     private var currentSearchQuery: String = ""
@@ -44,13 +43,16 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        return inflater.inflate(R.layout.fragment_home, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
         recyclerView = view.findViewById(R.id.rvCars)
-        btnMatchmaker = view.findViewById(R.id.btnMatchmaker)
         spinnerSort = view.findViewById(R.id.spinnerSort)
         switchMyCars = view.findViewById(R.id.switchMyCars)
 
@@ -90,51 +92,12 @@ class HomeFragment : Fragment() {
 
         setupSortSpinner()
         switchMyCars.setOnCheckedChangeListener { _, _ -> applyFiltersAndSort() }
-
-        // --- BUKA DIALOG FILTER DULU ---
-        btnMatchmaker.setOnClickListener {
-            showMatchmakerDialog()
-        }
-
-        return view
     }
 
     override fun onResume() {
         super.onResume()
         loadUserWishlist()
         loadCarsFromFirestore()
-    }
-
-    private fun showMatchmakerDialog() {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_matchmaker, null)
-        val actBudget = dialogView.findViewById<AutoCompleteTextView>(R.id.actBudget)
-        val actType = dialogView.findViewById<AutoCompleteTextView>(R.id.actType)
-        val btnFind = dialogView.findViewById<Button>(R.id.btnFindMatch)
-
-        val budgets = listOf("Di bawah 200 Juta", "200 - 500 Juta", "Di atas 500 Juta", "Tampilkan Semua")
-        val types = listOf("SUV", "Sedan", "MPV", "Hatchback", "Tampilkan Semua")
-
-        actBudget.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, budgets))
-        actType.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, types))
-
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .create()
-
-        btnFind.setOnClickListener {
-            val selectedBudget = actBudget.text.toString()
-            val selectedType = actType.text.toString()
-
-            // --- LEMPAR DATA FILTER KE MATCH ACTIVITY ---
-            val intent = Intent(requireContext(), MatchActivity::class.java)
-            intent.putExtra("FILTER_BUDGET", selectedBudget)
-            intent.putExtra("FILTER_TYPE", selectedType)
-            startActivity(intent)
-
-            dialog.dismiss()
-        }
-
-        dialog.show()
     }
 
     private fun loadUserWishlist() {

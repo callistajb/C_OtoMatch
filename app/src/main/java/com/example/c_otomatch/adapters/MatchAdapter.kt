@@ -16,6 +16,10 @@ class MatchAdapter(
     private var cars: List<Car>
 ) : RecyclerView.Adapter<MatchAdapter.ViewHolder>() {
 
+    private var onItemClickListener: ((Car) -> Unit)? = null
+    fun setOnItemClickListener(listener: (Car) -> Unit) {
+        onItemClickListener = listener
+    }
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val imgCard: ImageView = view.findViewById(R.id.imgCard)
         val name: TextView = view.findViewById(R.id.tvCardName)
@@ -43,6 +47,9 @@ class MatchAdapter(
         holder.name.text = car.name
         holder.price.text = formatPrice(car.price)
         holder.location.text = "📍 ${car.location}"
+        holder.itemView.setOnClickListener {
+            onItemClickListener?.invoke(car)
+        }
 
         // Format detail: "2020 • SUV • Bensin"
         val detailText = listOf(car.year.toString(), car.bodyType, car.fuel)

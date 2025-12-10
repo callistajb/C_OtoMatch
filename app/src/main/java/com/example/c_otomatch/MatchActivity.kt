@@ -1,18 +1,20 @@
 package com.example.c_otomatch
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.adapters.MatchAdapter
 import com.example.c_otomatch.databinding.ActivityMatchBinding
 import com.example.c_otomatch.models.Car
 import com.example.c_otomatch.utils.NumberTextWatcher
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.yuyakaido.android.cardstackview.*
@@ -24,8 +26,14 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
     private lateinit var adapter: MatchAdapter
     private val carList = mutableListOf<Car>()
 
+    private lateinit var reviewAdapter: CarAdapter
+    private val reviewList = mutableListOf<Car>()
+
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
+
+    private var currentBudgetFilter: String = "Tampilkan Semua"
+    private var currentTypeFilter: String = "Tampilkan Semua"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,21 +43,18 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
-        // 2. Perbaikan Tombol Back
         setSupportActionBar(binding.toolbarMatch)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-        binding.toolbarMatch.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
+        binding.toolbarMatch.setNavigationOnClickListener { finish() }
 
         setupCardStack()
+        setupReviewList() // Setup RecyclerView untuk review
 
-        // Ambil filter dari HomeFragment
-        val budgetFilter = intent.getStringExtra("FILTER_BUDGET") ?: "Tampilkan Semua"
-        val typeFilter = intent.getStringExtra("FILTER_TYPE") ?: "Tampilkan Semua"
+        currentBudgetFilter = intent.getStringExtra("FILTER_BUDGET") ?: "Tampilkan Semua"
+        currentTypeFilter = intent.getStringExtra("FILTER_TYPE") ?: "Tampilkan Semua"
 
-        loadCars(budgetFilter, typeFilter)
+        loadCars(currentBudgetFilter, currentTypeFilter)
         setupButtons()
     }
 
@@ -75,10 +80,76 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                 supportsChangeAnimations = false
             }
         }
+
+        // 3. KLIK KARTU -> BUKA DETAIL
+        adapter.setOnItemClickListener { car ->
+            val intent = Intent(this, CarDetailActivity::class.java).apply {
+                putExtra("car_document_id", car.documentId)
+                putExtra("car_name", car.name)
+                putExtra("car_brand", car.brand)
+                putExtra("car_year", car.year)
+                putExtra("car_price", car.price)
+                putExtra("car_mileage", car.mileage)
+                putExtra("car_location", car.location)
+                val img = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
+                putExtra("car_image_url", img)
+                putExtra("seller_name", car.sellerName)
+                putExtra("seller_contact", car.sellerContact)
+                putExtra("body_type", car.bodyType)
+                putExtra("color", car.color)
+                putExtra("exactColor", car.exactColor)
+                putExtra("transmission", car.transmission)
+                putExtra("fuel", car.fuel)
+                putExtra("variant", car.variant)
+                putExtra("capacity", car.capacity)
+                putExtra("negatives", car.negatives)
+                putExtra("mods", car.mods)
+            }
+            startActivity(intent)
+        }
+    }
+
+    // SETUP RECYCLER VIEW UNTUK REVIEW
+    private fun setupReviewList() {
+        reviewAdapter = CarAdapter(
+            reviewList,
+            onItemClicked = { car ->
+                // Bisa buka detail juga dari sini
+                val intent = Intent(this, CarDetailActivity::class.java)
+                intent.putExtra("car_document_id", car.documentId)
+                intent.putExtra("car_name", car.name)
+                intent.putExtra("car_price", car.price)
+                intent.putExtra("car_brand", car.brand)
+                intent.putExtra("car_year", car.year)
+                intent.putExtra("car_mileage", car.mileage)
+                intent.putExtra("car_location", car.location)
+                val img = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
+                intent.putExtra("car_image_url", img)
+                intent.putExtra("seller_name", car.sellerName)
+                intent.putExtra("seller_contact", car.sellerContact)
+                intent.putExtra("body_type", car.bodyType)
+                intent.putExtra("color", car.color)
+                intent.putExtra("exactColor", car.exactColor)
+                intent.putExtra("transmission", car.transmission)
+                intent.putExtra("fuel", car.fuel)
+                intent.putExtra("variant", car.variant)
+                intent.putExtra("capacity", car.capacity)
+                intent.putExtra("negatives", car.negatives)
+                intent.putExtra("mods", car.mods)
+                startActivity(intent)
+            },
+            onMarkSoldClicked = {},
+            isSellFragment = false
+        )
+        binding.rvMatchReview.layoutManager = LinearLayoutManager(this)
+        binding.rvMatchReview.adapter = reviewAdapter
     }
 
     private fun loadCars(budgetFilter: String, typeFilter: String) {
-        // Ambil semua mobil yang belum terjual
+        binding.emptyStateLayout.visibility = View.GONE
+        binding.cardStackView.visibility = View.VISIBLE
+        binding.buttonContainer.visibility = View.VISIBLE
+
         db.collection("cars")
             .whereEqualTo("isSold", false)
             .get()
@@ -90,10 +161,10 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                     val car = doc.toObject(Car::class.java)
                     car.documentId = doc.id
 
-                    // Filter 1: Jangan tampilkan mobil sendiri
+                    // Filter: Jangan tampilkan mobil sendiri
                     if (uid != null && car.sellerUid == uid) continue
 
-                    // Filter 2: Filter Budget
+                    // LOGIKA FILTER
                     val price = safePriceToLong(car.price)
                     val budgetMatch = when(budgetFilter) {
                         "Di bawah 200 Juta" -> price < 200_000_000
@@ -102,7 +173,6 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                         else -> true
                     }
 
-                    // Filter 3: Filter Tipe Body
                     val typeMatch = if (typeFilter == "Tampilkan Semua" || typeFilter.isEmpty()) true
                     else car.bodyType.equals(typeFilter, ignoreCase = true)
 
@@ -111,19 +181,64 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                     }
                 }
 
-                carList.shuffle() // Acak urutan
+                carList.shuffle() // Acak agar variatif
                 adapter.notifyDataSetChanged()
 
+                // Jika kosong dari awal
                 if (carList.isEmpty()) {
-                    Toast.makeText(this, "Tidak ada mobil yang cocok dengan filter!", Toast.LENGTH_LONG).show()
+                    showEmptyState()
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Gagal memuat data", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun showEmptyState() {
+        binding.cardStackView.visibility = View.GONE
+        binding.buttonContainer.visibility = View.GONE
+        binding.emptyStateLayout.visibility = View.VISIBLE
+
+        loadWishlistReview()
+    }
+
+    private fun loadWishlistReview() {
+        val user = auth.currentUser ?: return
+
+        // 1. Ambil list ID dari User
+        db.collection("users").document(user.uid).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val wishlistIds = document.get("wishlist") as? List<String>
+
+                    if (!wishlistIds.isNullOrEmpty()) {
+                        // 2. Ambil detail mobil berdasarkan ID
+                        db.collection("cars")
+                            .whereIn(FieldPath.documentId(), wishlistIds)
+                            .get()
+                            .addOnSuccessListener { result ->
+                                reviewList.clear()
+                                for (doc in result) {
+                                    val car = doc.toObject(Car::class.java)
+                                    car.documentId = doc.id
+                                    car.isWishlist = true // Agar icon love merah
+                                    reviewList.add(car)
+                                }
+                                // Update Adapter Review
+                                reviewAdapter.updateList(reviewList)
+                                // Pass ID list ke adapter supaya icon love tetap menyala
+                                reviewAdapter.updateWishlist(wishlistIds)
+                            }
+                    } else {
+                        reviewList.clear()
+                        reviewAdapter.notifyDataSetChanged()
+                    }
+                }
             }
     }
 
     private fun setupButtons() {
+        // Tombol SKIP
         binding.btnSkip.setOnClickListener {
             val setting = SwipeAnimationSetting.Builder()
                 .setDirection(Direction.Left)
@@ -134,6 +249,7 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
             binding.cardStackView.swipe()
         }
 
+        // Tombol LIKE
         binding.btnLike.setOnClickListener {
             val setting = SwipeAnimationSetting.Builder()
                 .setDirection(Direction.Right)
@@ -142,6 +258,27 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                 .build()
             manager.setSwipeAnimationSetting(setting)
             binding.cardStackView.swipe()
+        }
+
+        // 4. FITUR UNDO (REWIND)
+        binding.btnUndo.setOnClickListener {
+            val setting = RewindAnimationSetting.Builder()
+                .setDirection(Direction.Bottom)
+                .setDuration(Duration.Normal.duration)
+                .setInterpolator(android.view.animation.DecelerateInterpolator())
+                .build()
+            manager.setRewindAnimationSetting(setting)
+            binding.cardStackView.rewind()
+        }
+
+        // 5. OPSI "MULAI LAGI" DENGAN FILTER YANG SAMA
+        binding.btnReset.setOnClickListener {
+            loadCars(currentBudgetFilter, currentTypeFilter)
+        }
+
+        // 6. OPSI "KEMBALI" KE HOME
+        binding.btnBackHome.setOnClickListener {
+            finish()
         }
     }
 
@@ -155,52 +292,62 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
 
     // --- CardStackListener Implementations ---
 
-    // 4. Perbaikan Visual Feedback (Overlay) saat Swipe
+    // 7. VISUAL FEEDBACK SAAT DRAGGING
     override fun onCardDragging(direction: Direction?, ratio: Float) {
         val currentView = manager.findViewByPosition(manager.topPosition) ?: return
 
-        // Cari view overlay di dalam item_match_card.xml
         val leftOverlay = currentView.findViewById<View>(R.id.left_overlay)
         val rightOverlay = currentView.findViewById<View>(R.id.right_overlay)
 
+        // Reset visibility dulu
+        leftOverlay.visibility = View.GONE
+        rightOverlay.visibility = View.GONE
+
         if (direction == Direction.Right) {
-            // Geser Kanan -> Tampilkan Overlay Hijau (Wishlist)
             rightOverlay.visibility = View.VISIBLE
             rightOverlay.alpha = ratio
-            leftOverlay.visibility = View.GONE
         } else if (direction == Direction.Left) {
-            // Geser Kiri -> Tampilkan Overlay Merah (Skip)
             leftOverlay.visibility = View.VISIBLE
             leftOverlay.alpha = ratio
-            rightOverlay.visibility = View.GONE
         }
     }
 
+    // 8. LOGIC WISHLIST (FIXED)
     override fun onCardSwiped(direction: Direction?) {
-        val position = manager.topPosition - 1
-        if (position >= 0 && position < carList.size) {
-            val car = carList[position]
+        // Logika CardStackView: Saat onCardSwiped dipanggil, topPosition SUDAH bertambah.
+        // Jadi kartu yang baru saja di-swipe ada di posisi (manager.topPosition - 1)
+        val swipedIndex = manager.topPosition - 1
+
+        if (swipedIndex in carList.indices) {
+            val car = carList[swipedIndex]
 
             if (direction == Direction.Right) {
                 addToWishlist(car)
             }
         }
 
+        // Cek jika kartu sudah habis
         if (manager.topPosition == adapter.itemCount) {
-            Toast.makeText(this, "Mobil sudah habis! Cek lagi nanti.", Toast.LENGTH_SHORT).show()
+            showEmptyState()
         }
     }
 
     private fun addToWishlist(car: Car) {
         val user = auth.currentUser ?: return
+        // Gunakan arrayUnion agar tidak duplikat
         db.collection("users").document(user.uid)
             .update("wishlist", FieldValue.arrayUnion(car.documentId))
             .addOnSuccessListener {
                 Toast.makeText(this, "Disimpan ke Wishlist! ❤️", Toast.LENGTH_SHORT).show()
             }
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal menyimpan wishlist", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    override fun onCardRewound() {}
+    override fun onCardRewound() {
+        Toast.makeText(this, "Undo berhasil ↺", Toast.LENGTH_SHORT).show()
+    }
     override fun onCardCanceled() {}
     override fun onCardAppeared(view: View?, position: Int) {}
     override fun onCardDisappeared(view: View?, position: Int) {}

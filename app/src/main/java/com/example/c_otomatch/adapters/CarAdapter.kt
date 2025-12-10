@@ -75,7 +75,6 @@ class CarAdapter(
         holder.btnFavorite.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
-                // --- BAHASA LEBIH ELEGAN ---
                 Toast.makeText(holder.itemView.context, "Silakan login untuk menyimpan ke Wishlist.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -95,8 +94,21 @@ class CarAdapter(
             val userDocRef = db.collection("users").document(user.uid)
 
             if (car.documentId.isNotEmpty()) {
-                if (willBeWishlist) userDocRef.update("wishlist", FieldValue.arrayUnion(car.documentId))
-                else userDocRef.update("wishlist", FieldValue.arrayRemove(car.documentId))
+                if (willBeWishlist) {
+                    userDocRef.update("wishlist", FieldValue.arrayUnion(car.documentId))
+                        .addOnFailureListener {
+                            // Kalau gagal, balikin UI (Rollback)
+                            userWishlistIds.remove(car.documentId)
+                            notifyItemChanged(position)
+                            Toast.makeText(holder.itemView.context, "Gagal menambahkan ke wishlist", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    userDocRef.update("wishlist", FieldValue.arrayRemove(car.documentId))
+                        .addOnFailureListener {
+                            userWishlistIds.add(car.documentId)
+                            notifyItemChanged(position)
+                        }
+                }
             }
         }
 
