@@ -2,9 +2,14 @@ package com.example.c_otomatch
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.LinearInterpolator
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,8 +37,12 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
-    private var currentBudgetFilter: String = "Tampilkan Semua"
-    private var currentTypeFilter: String = "Tampilkan Semua"
+    // Variabel filter
+    private var currentBudget: String = "Tampilkan Semua"
+    private var currentType: String = "Tampilkan Semua"
+    private var currentTrans: String = "Tampilkan Semua"
+    private var currentFuel: String = "Tampilkan Semua"
+    private var currentColor: String = "Tampilkan Semua"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,14 +58,71 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
         binding.toolbarMatch.setNavigationOnClickListener { finish() }
 
         setupCardStack()
-        setupReviewList() // Setup RecyclerView untuk review
+        setupReviewList()
 
-        currentBudgetFilter = intent.getStringExtra("FILTER_BUDGET") ?: "Tampilkan Semua"
-        currentTypeFilter = intent.getStringExtra("FILTER_TYPE") ?: "Tampilkan Semua"
+        // Ambil data filter awal dari Intent
+        currentBudget = intent.getStringExtra("FILTER_BUDGET") ?: "Tampilkan Semua"
+        currentType = intent.getStringExtra("FILTER_TYPE") ?: "Tampilkan Semua"
+        currentTrans = intent.getStringExtra("FILTER_TRANS") ?: "Tampilkan Semua"
+        currentFuel = intent.getStringExtra("FILTER_FUEL") ?: "Tampilkan Semua"
+        currentColor = intent.getStringExtra("FILTER_COLOR") ?: "Tampilkan Semua"
 
-        loadCars(currentBudgetFilter, currentTypeFilter)
+        loadCars()
         setupButtons()
     }
+
+    // --- FUNGSI BARU: MENAMPILKAN DIALOG FILTER DI SINI ---
+    private fun showMatchmakerDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_matchmaker, null)
+        val actBudget = dialogView.findViewById<AutoCompleteTextView>(R.id.actBudget)
+        val actType = dialogView.findViewById<AutoCompleteTextView>(R.id.actType)
+        val actTrans = dialogView.findViewById<AutoCompleteTextView>(R.id.actTrans)
+        val actFuel = dialogView.findViewById<AutoCompleteTextView>(R.id.actFuel)
+        val actColor = dialogView.findViewById<AutoCompleteTextView>(R.id.actColor)
+        val btnFind = dialogView.findViewById<Button>(R.id.btnFindMatch)
+
+        val budgets = listOf("Tampilkan Semua", "Di bawah 200 Juta", "200 - 500 Juta", "Di atas 500 Juta")
+        val types = listOf("Tampilkan Semua", "SUV", "MPV", "Sedan", "Hatchback", "Coupe", "Van", "Pickup")
+        val transmissions = listOf("Tampilkan Semua", "Manual", "Automatic", "CVT")
+        val fuels = listOf("Tampilkan Semua", "Bensin", "Diesel", "Listrik", "Hybrid")
+        val colors = listOf("Tampilkan Semua", "Hitam", "Putih", "Silver", "Abu-abu", "Merah", "Biru", "Hijau", "Kuning", "Coklat", "Oranye", "Lainnya")
+
+        // Set Adapters
+        actBudget.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, budgets))
+        actType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, types))
+        actTrans.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, transmissions))
+        actFuel.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, fuels))
+        actColor.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, colors))
+
+        // Set Default Values (Opsional: Bisa di-set sesuai filter terakhir)
+        actBudget.setText(currentBudget, false)
+        actType.setText(currentType, false)
+        actTrans.setText(currentTrans, false)
+        actFuel.setText(currentFuel, false)
+        actColor.setText(currentColor, false)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        btnFind.setOnClickListener {
+            // 1. Update variabel global dengan input baru
+            currentBudget = actBudget.text.toString()
+            currentType = actType.text.toString()
+            currentTrans = actTrans.text.toString()
+            currentFuel = actFuel.text.toString()
+            currentColor = actColor.text.toString()
+
+            // 2. Reload mobil dengan filter baru
+            loadCars()
+
+            Toast.makeText(this, "Mencari dengan filter baru...", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+    // -------------------------------------------------------
 
     private fun setupCardStack() {
         manager = CardStackLayoutManager(this, this)
@@ -81,7 +147,6 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
             }
         }
 
-        // 3. KLIK KARTU -> BUKA DETAIL
         adapter.setOnItemClickListener { car ->
             val intent = Intent(this, CarDetailActivity::class.java).apply {
                 putExtra("car_document_id", car.documentId)
@@ -109,12 +174,10 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
         }
     }
 
-    // SETUP RECYCLER VIEW UNTUK REVIEW
     private fun setupReviewList() {
         reviewAdapter = CarAdapter(
             reviewList,
             onItemClicked = { car ->
-                // Bisa buka detail juga dari sini
                 val intent = Intent(this, CarDetailActivity::class.java)
                 intent.putExtra("car_document_id", car.documentId)
                 intent.putExtra("car_name", car.name)
@@ -145,11 +208,24 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
         binding.rvMatchReview.adapter = reviewAdapter
     }
 
-    private fun loadCars(budgetFilter: String, typeFilter: String) {
+    private fun loadCars() {
         binding.emptyStateLayout.visibility = View.GONE
         binding.cardStackView.visibility = View.VISIBLE
         binding.buttonContainer.visibility = View.VISIBLE
 
+        val user = auth.currentUser ?: return
+
+        db.collection("users").document(user.uid).get()
+            .addOnSuccessListener { userDoc ->
+                val wishlistIds = userDoc.get("wishlist") as? List<String> ?: emptyList()
+                fetchCarsAndFilter(wishlistIds)
+            }
+            .addOnFailureListener {
+                fetchCarsAndFilter(emptyList())
+            }
+    }
+
+    private fun fetchCarsAndFilter(wishlistIds: List<String>) {
         db.collection("cars")
             .whereEqualTo("isSold", false)
             .get()
@@ -161,37 +237,46 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                     val car = doc.toObject(Car::class.java)
                     car.documentId = doc.id
 
-                    // Filter: Jangan tampilkan mobil sendiri
                     if (uid != null && car.sellerUid == uid) continue
+                    if (wishlistIds.contains(car.documentId)) continue
 
-                    // LOGIKA FILTER
                     val price = safePriceToLong(car.price)
-                    val budgetMatch = when(budgetFilter) {
+
+                    val matchBudget = when(currentBudget) {
                         "Di bawah 200 Juta" -> price < 200_000_000
                         "200 - 500 Juta" -> price in 200_000_000..500_000_000
                         "Di atas 500 Juta" -> price > 500_000_000
                         else -> true
                     }
 
-                    val typeMatch = if (typeFilter == "Tampilkan Semua" || typeFilter.isEmpty()) true
-                    else car.bodyType.equals(typeFilter, ignoreCase = true)
+                    val matchType = isFilterMatch(currentType, car.bodyType)
+                    val matchTrans = isFilterMatch(currentTrans, car.transmission)
+                    val matchFuel = isFilterMatch(currentFuel, car.fuel)
+                    val matchColor = isFilterMatch(currentColor, car.color)
 
-                    if (budgetMatch && typeMatch) {
+                    if (matchBudget && matchType && matchTrans && matchFuel && matchColor) {
                         carList.add(car)
                     }
                 }
 
-                carList.shuffle() // Acak agar variatif
+                carList.shuffle()
                 adapter.notifyDataSetChanged()
 
-                // Jika kosong dari awal
                 if (carList.isEmpty()) {
                     showEmptyState()
                 }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal memuat: ${it.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun isFilterMatch(filterValue: String, carValue: String): Boolean {
+        return if (filterValue == "Tampilkan Semua" || filterValue.isEmpty()) {
+            true
+        } else {
+            carValue.equals(filterValue, ignoreCase = true)
+        }
     }
 
     private fun showEmptyState() {
@@ -204,15 +289,11 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
 
     private fun loadWishlistReview() {
         val user = auth.currentUser ?: return
-
-        // 1. Ambil list ID dari User
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
                     val wishlistIds = document.get("wishlist") as? List<String>
-
                     if (!wishlistIds.isNullOrEmpty()) {
-                        // 2. Ambil detail mobil berdasarkan ID
                         db.collection("cars")
                             .whereIn(FieldPath.documentId(), wishlistIds)
                             .get()
@@ -221,12 +302,10 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
                                 for (doc in result) {
                                     val car = doc.toObject(Car::class.java)
                                     car.documentId = doc.id
-                                    car.isWishlist = true // Agar icon love merah
+                                    car.isWishlist = true
                                     reviewList.add(car)
                                 }
-                                // Update Adapter Review
                                 reviewAdapter.updateList(reviewList)
-                                // Pass ID list ke adapter supaya icon love tetap menyala
                                 reviewAdapter.updateWishlist(wishlistIds)
                             }
                     } else {
@@ -238,7 +317,6 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
     }
 
     private fun setupButtons() {
-        // Tombol SKIP
         binding.btnSkip.setOnClickListener {
             val setting = SwipeAnimationSetting.Builder()
                 .setDirection(Direction.Left)
@@ -249,7 +327,6 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
             binding.cardStackView.swipe()
         }
 
-        // Tombol LIKE
         binding.btnLike.setOnClickListener {
             val setting = SwipeAnimationSetting.Builder()
                 .setDirection(Direction.Right)
@@ -260,7 +337,6 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
             binding.cardStackView.swipe()
         }
 
-        // 4. FITUR UNDO (REWIND)
         binding.btnUndo.setOnClickListener {
             val setting = RewindAnimationSetting.Builder()
                 .setDirection(Direction.Bottom)
@@ -271,13 +347,37 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
             binding.cardStackView.rewind()
         }
 
-        // 5. OPSI "MULAI LAGI" DENGAN FILTER YANG SAMA
-        binding.btnReset.setOnClickListener {
-            loadCars(currentBudgetFilter, currentTypeFilter)
+        // --- TOMBOL NAVIGASI BAWAH ---
+
+        binding.btnNavHome.setOnClickListener {
+            finish()
         }
 
-        // 6. OPSI "KEMBALI" KE HOME
-        binding.btnBackHome.setOnClickListener {
+        binding.btnNavReset.setOnClickListener {
+            val options = arrayOf("Gunakan Filter Sama", "Atur Spesifikasi Baru")
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Ulangi Pencarian?")
+            builder.setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        // Opsi: Filter Sama
+                        loadCars()
+                        Toast.makeText(this, "Memuat ulang...", Toast.LENGTH_SHORT).show()
+                    }
+                    1 -> {
+                        // Opsi: Filter Baru -> Munculkan Dialog
+                        showMatchmakerDialog()
+                    }
+                }
+            }
+            builder.show()
+        }
+
+        binding.btnNavWishlist.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            intent.putExtra("NAVIGATE_TO", "wishlist")
+            startActivity(intent)
             finish()
         }
     }
@@ -290,16 +390,11 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
         } catch (e: Exception) { 0L }
     }
 
-    // --- CardStackListener Implementations ---
-
-    // 7. VISUAL FEEDBACK SAAT DRAGGING
     override fun onCardDragging(direction: Direction?, ratio: Float) {
         val currentView = manager.findViewByPosition(manager.topPosition) ?: return
-
         val leftOverlay = currentView.findViewById<View>(R.id.left_overlay)
         val rightOverlay = currentView.findViewById<View>(R.id.right_overlay)
 
-        // Reset visibility dulu
         leftOverlay.visibility = View.GONE
         rightOverlay.visibility = View.GONE
 
@@ -312,21 +407,14 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
         }
     }
 
-    // 8. LOGIC WISHLIST (FIXED)
     override fun onCardSwiped(direction: Direction?) {
-        // Logika CardStackView: Saat onCardSwiped dipanggil, topPosition SUDAH bertambah.
-        // Jadi kartu yang baru saja di-swipe ada di posisi (manager.topPosition - 1)
         val swipedIndex = manager.topPosition - 1
-
         if (swipedIndex in carList.indices) {
             val car = carList[swipedIndex]
-
             if (direction == Direction.Right) {
                 addToWishlist(car)
             }
         }
-
-        // Cek jika kartu sudah habis
         if (manager.topPosition == adapter.itemCount) {
             showEmptyState()
         }
@@ -334,7 +422,6 @@ class MatchActivity : AppCompatActivity(), CardStackListener {
 
     private fun addToWishlist(car: Car) {
         val user = auth.currentUser ?: return
-        // Gunakan arrayUnion agar tidak duplikat
         db.collection("users").document(user.uid)
             .update("wishlist", FieldValue.arrayUnion(car.documentId))
             .addOnSuccessListener {

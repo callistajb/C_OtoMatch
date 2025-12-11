@@ -15,9 +15,11 @@ import com.example.c_otomatch.CarDetailActivity
 import com.example.c_otomatch.R
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.models.Car
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 
 class WishlistFragment : Fragment() {
 
@@ -56,7 +58,7 @@ class WishlistFragment : Fragment() {
                     putExtra("car_mileage", car.mileage)
                     putExtra("car_location", car.location)
                     val img = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
-                    putExtra("car_image_url", car.imageUrl)
+                    putExtra("car_image_url", img)
                     putExtra("seller_name", car.sellerName)
                     putExtra("seller_contact", car.sellerContact)
                     putExtra("body_type", car.bodyType)
@@ -68,6 +70,7 @@ class WishlistFragment : Fragment() {
                 startActivity(intent)
             },
             onMarkSoldClicked = {
+                // Fitur sell tidak dipakai di sini
             },
             isSellFragment = false
         )
@@ -91,20 +94,21 @@ class WishlistFragment : Fragment() {
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {
-                    Log.w("WishlistFragment", "User document not found")
+                    val wishlistIds = document.get("wishlist") as? List<String>
+
+                    // PENTING: Update juga list ID di adapter agar icon love menyala merah
+                    if (wishlistIds != null) {
+                        adapter.updateWishlist(wishlistIds)
+                    }
+
+                    if (wishlistIds.isNullOrEmpty()) {
+                        showEmpty(true)
+                    } else {
+                        fetchCarsFromIds(wishlistIds)
+                    }
+                } else {
                     showEmpty(true)
-                    return@addOnSuccessListener
                 }
-
-                val wishlistIds = document.get("wishlist") as? List<String>
-
-                if (wishlistIds.isNullOrEmpty()) {
-                    showEmpty(true)
-                    return@addOnSuccessListener
-                }
-
-                fetchCarsFromIds(wishlistIds)
-
             }
             .addOnFailureListener { e ->
                 Log.e("WishlistFragment", "Error fetching user document", e)
@@ -119,27 +123,40 @@ class WishlistFragment : Fragment() {
             return
         }
 
-        db.collection("cars")
-            .whereIn(FieldPath.documentId(), carIds) // Query mobil berdasarkan ID dokumen
-            .get()
-            .addOnSuccessListener { result ->
+        // --- SOLUSI LIMIT 10 ITEM FIRESTORE ---
+        // Kita pecah list ID menjadi beberapa bagian (chunk), masing-masing max 10 ID
+        val chunks = carIds.chunked(10)
+        val tasks = chunks.map { chunk ->
+            db.collection("cars")
+                .whereIn(FieldPath.documentId(), chunk)
+                .get()
+        }
+
+        // Jalankan semua query secara paralel
+        Tasks.whenAllSuccess<QuerySnapshot>(tasks)
+            .addOnSuccessListener { results ->
                 wishlistCars.clear()
-                for (document in result) {
-                    try {
-                        val car = document.toObject(Car::class.java)
-                        car.documentId = document.id
-                        // Cek status isWishlist secara lokal (agar icon hati menyala)
-                        car.isWishlist = true
-                        wishlistCars.add(car)
-                    } catch (e: Exception) {
-                        Log.e("WishlistFragment", "Error converting car", e)
+
+                // Gabungkan hasil dari semua chunk
+                for (snapshot in results) {
+                    for (document in snapshot) {
+                        try {
+                            val car = document.toObject(Car::class.java)
+                            car.documentId = document.id
+                            // Paksa true karena ini halaman wishlist
+                            car.isWishlist = true
+                            wishlistCars.add(car)
+                        } catch (e: Exception) {
+                            Log.e("WishlistFragment", "Error converting car", e)
+                        }
                     }
                 }
+
                 adapter.updateList(wishlistCars)
                 showEmpty(wishlistCars.isEmpty())
             }
             .addOnFailureListener { e ->
-                Log.e("WishlistFragment", "Error fetching cars by ID", e)
+                Log.e("WishlistFragment", "Error fetching cars chunk", e)
                 showEmpty(true)
             }
     }
@@ -148,6 +165,7 @@ class WishlistFragment : Fragment() {
         if (isEmpty) {
             tvEmpty.visibility = View.VISIBLE
             recyclerView.visibility = View.GONE
+            // Bersihkan list agar tidak ada data hantu
             wishlistCars.clear()
             adapter.notifyDataSetChanged()
         } else {

@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvGreeting: TextView
     private lateinit var etSearch: EditText
     private lateinit var imgSearchIcon: ImageView
-    private lateinit var btnMatchmaker: ImageButton // Variabel Baru
+    private lateinit var btnMatchmaker: ImageButton
     private lateinit var searchBarLayout: View
     private var currentFragment: Fragment? = null
 
@@ -55,9 +55,8 @@ class MainActivity : AppCompatActivity() {
         etSearch = findViewById(R.id.etSearch)
         imgSearchIcon = findViewById(R.id.imgSearchIcon)
         searchBarLayout = findViewById(R.id.searchBarLayout)
-        btnMatchmaker = findViewById(R.id.btnMatchmakerMain) // Inisialisasi Tombol Baru
+        btnMatchmaker = findViewById(R.id.btnMatchmakerMain)
 
-        // ... (Logika Greeting user tetap sama) ...
         val firebaseUser = auth.currentUser
         if (firebaseUser != null) {
             db.collection("users").document(firebaseUser.uid).get()
@@ -70,10 +69,10 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 .addOnFailureListener {
-                    tvGreeting.text = "Hi, Selamat datang!"
+                    tvGreeting.text = "Hi, Guest!"
                 }
         } else {
-            tvGreeting.text = "Hi, Selamat datang!"
+            tvGreeting.text = "Hi, Guest!"
         }
 
         imgLogo.setOnClickListener {
@@ -81,7 +80,13 @@ class MainActivity : AppCompatActivity() {
             loadFragment(HomeFragment())
         }
 
-        loadFragment(HomeFragment())
+        if (intent.getStringExtra("NAVIGATE_TO") == "wishlist") {
+            bottomNav.selectedItemId = R.id.nav_wishlist
+            loadFragment(WishlistFragment())
+        } else {
+            loadFragment(HomeFragment())
+        }
+
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -106,38 +111,51 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // --- LISTENER TOMBOL FILTER DI PINDAH KESINI ---
         btnMatchmaker.setOnClickListener {
             showMatchmakerDialog()
         }
     }
 
-    // --- FUNGSI DIALOG DIPINDAHKAN KE SINI ---
     private fun showMatchmakerDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_matchmaker, null)
         val actBudget = dialogView.findViewById<AutoCompleteTextView>(R.id.actBudget)
         val actType = dialogView.findViewById<AutoCompleteTextView>(R.id.actType)
+        val actTrans = dialogView.findViewById<AutoCompleteTextView>(R.id.actTrans)
+        val actFuel = dialogView.findViewById<AutoCompleteTextView>(R.id.actFuel)
+        val actColor = dialogView.findViewById<AutoCompleteTextView>(R.id.actColor)
         val btnFind = dialogView.findViewById<Button>(R.id.btnFindMatch)
 
-        val budgets = listOf("Di bawah 200 Juta", "200 - 500 Juta", "Di atas 500 Juta", "Tampilkan Semua")
-        val types = listOf("SUV", "Sedan", "MPV", "Hatchback", "Tampilkan Semua")
+        val budgets = listOf("Tampilkan Semua", "Di bawah 200 Juta", "200 - 500 Juta", "Di atas 500 Juta")
+        val types = listOf("Tampilkan Semua", "SUV", "MPV", "Sedan", "Hatchback", "Coupe", "Van", "Pickup")
+        val transmissions = listOf("Tampilkan Semua", "Manual", "Automatic", "CVT")
+        val fuels = listOf("Tampilkan Semua", "Bensin", "Diesel", "Listrik", "Hybrid")
+        val colors = listOf("Tampilkan Semua", "Hitam", "Putih", "Silver", "Abu-abu", "Merah", "Biru", "Hijau", "Kuning", "Coklat", "Oranye", "Lainnya")
 
         actBudget.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, budgets))
         actType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, types))
+        actTrans.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, transmissions))
+        actFuel.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, fuels))
+        actColor.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, colors))
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .create()
 
         btnFind.setOnClickListener {
-            val selectedBudget = actBudget.text.toString()
-            val selectedType = actType.text.toString()
+            val filterBudget = actBudget.text.toString()
+            val filterType = actType.text.toString()
+            val filterTrans = actTrans.text.toString()
+            val filterFuel = actFuel.text.toString()
+            val filterColor = actColor.text.toString()
 
             val intent = Intent(this, MatchActivity::class.java)
-            intent.putExtra("FILTER_BUDGET", selectedBudget)
-            intent.putExtra("FILTER_TYPE", selectedType)
-            startActivity(intent)
+            intent.putExtra("FILTER_BUDGET", filterBudget)
+            intent.putExtra("FILTER_TYPE", filterType)
+            intent.putExtra("FILTER_TRANS", filterTrans)
+            intent.putExtra("FILTER_FUEL", filterFuel)
+            intent.putExtra("FILTER_COLOR", filterColor)
 
+            startActivity(intent)
             dialog.dismiss()
         }
 
@@ -160,13 +178,21 @@ class MainActivity : AppCompatActivity() {
             etSearch.visibility = View.GONE
             imgSearchIcon.visibility = View.GONE
             searchBarLayout.visibility = View.GONE
-            btnMatchmaker.visibility = View.GONE // Sembunyikan tombol filter di profile
+            btnMatchmaker.visibility = View.GONE
         } else {
             etSearch.visibility = View.VISIBLE
             imgSearchIcon.visibility = View.VISIBLE
             searchBarLayout.visibility = View.VISIBLE
-            // Tampilkan tombol filter HANYA di HomeFragment
             btnMatchmaker.visibility = if (fragment is HomeFragment) View.VISIBLE else View.GONE
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getStringExtra("NAVIGATE_TO") == "wishlist") {
+            bottomNav.selectedItemId = R.id.nav_wishlist
+            loadFragment(WishlistFragment())
         }
     }
 }

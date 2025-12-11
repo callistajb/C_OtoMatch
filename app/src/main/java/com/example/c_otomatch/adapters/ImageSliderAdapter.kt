@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.c_otomatch.R
 
-// Menerima List<Any> supaya bisa menampung Uri (lokal) atau String (URL internet)
 class ImageSliderAdapter(private val images: List<Any>) :
     RecyclerView.Adapter<ImageSliderAdapter.SliderViewHolder>() {
 
@@ -19,7 +18,6 @@ class ImageSliderAdapter(private val images: List<Any>) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SliderViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_image_slider, parent, false)
-        // Pastikan gambar memenuhi container slider
         view.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT

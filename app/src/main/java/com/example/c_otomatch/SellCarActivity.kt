@@ -3,13 +3,14 @@ package com.example.c_otomatch
 import android.Manifest
 import android.app.Activity
 import android.app.ProgressDialog
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -25,10 +26,14 @@ import com.example.c_otomatch.adapters.ImageSliderAdapter
 import com.example.c_otomatch.databinding.ActivityAddCarBinding
 import com.example.c_otomatch.models.Car
 import com.example.c_otomatch.utils.NumberTextWatcher
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.ByteArrayOutputStream
+import java.util.Locale
 
 class SellCarActivity : AppCompatActivity() {
 
@@ -42,6 +47,9 @@ class SellCarActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var progressDialog: ProgressDialog
     private var editingCarId: String? = null
+
+    // Client Lokasi
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val pickMultipleImages = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isNotEmpty()) {
@@ -70,6 +78,17 @@ class SellCarActivity : AppCompatActivity() {
         else Toast.makeText(this, "Izin galeri ditolak", Toast.LENGTH_SHORT).show()
     }
 
+    // Permission Launcher untuk Tombol Lokasi
+    private val requestLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            getCurrentLocation()
+        } else {
+            Toast.makeText(this, "Izin lokasi ditolak", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddCarBinding.inflate(layoutInflater)
@@ -77,6 +96,7 @@ class SellCarActivity : AppCompatActivity() {
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         progressDialog = ProgressDialog(this).apply {
             setCancelable(false)
@@ -97,7 +117,7 @@ class SellCarActivity : AppCompatActivity() {
         } else {
             binding.toolbarSellCar.title = "Jual Mobil"
             binding.btnSubmit.text = "Submit & Post"
-            loadUserData()
+            loadUserData() // Load data user & lokasi profil otomatis
         }
 
         binding.etPrice.addTextChangedListener(NumberTextWatcher(binding.etPrice))
@@ -106,6 +126,17 @@ class SellCarActivity : AppCompatActivity() {
 
         binding.btnGallery.setOnClickListener { checkStoragePermission() }
         binding.btnCamera.setOnClickListener { checkCameraPermission() }
+
+        // --- TOMBOL LOKASI ---
+        binding.btnUseMyLocation.setOnClickListener {
+            // Cek izin, jika sudah ada langsung ambil lokasi, jika belum minta izin
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                getCurrentLocation()
+            } else {
+                requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+        // ---------------------
 
         binding.btnGeneratePrice.setOnClickListener {
             val year = binding.etYear.text.toString().toIntOrNull() ?: 2020
@@ -132,6 +163,65 @@ class SellCarActivity : AppCompatActivity() {
                     .setNegativeButton("Batal", null)
                     .show()
             }
+        }
+    }
+
+    private fun loadUserData() {
+        auth.currentUser?.let { user ->
+            db.collection("users").document(user.uid).get().addOnSuccessListener { document ->
+                if (document.exists()) {
+                    binding.etSellerName.setText(document.getString("name"))
+                    binding.etSellerContact.setText(document.getString("phone"))
+
+                    // Isi lokasi otomatis dari profil jika ada
+                    val profileLocation = document.getString("location")
+                    if (!profileLocation.isNullOrEmpty()) {
+                        binding.etLocation.setText(profileLocation)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getCurrentLocation() {
+        try {
+            Toast.makeText(this, "Mencari lokasi terkini...", Toast.LENGTH_SHORT).show()
+
+            // Gunakan Priority High agar dapat data GPS terbaru
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                null
+            ).addOnSuccessListener { location ->
+                if (location != null) {
+                    val lat = location.latitude
+                    val lon = location.longitude
+                    try {
+                        val geocoder = Geocoder(this, Locale.getDefault())
+                        @Suppress("DEPRECATION")
+                        val addresses = geocoder.getFromLocation(lat, lon, 1)
+
+                        if (!addresses.isNullOrEmpty()) {
+                            val address = addresses[0]
+                            val city = address.locality ?: address.subAdminArea
+                            val state = address.adminArea
+                            val country = address.countryName
+
+                            val locationString = listOfNotNull(city, state, country).joinToString(", ")
+                            binding.etLocation.setText(locationString)
+                            Toast.makeText(this, "Lokasi diperbarui!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            binding.etLocation.setText(String.format("Lat: %.4f, Lon: %.4f", lat, lon))
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SellCarActivity", "Geocoding failed", e)
+                        binding.etLocation.setText(String.format("Lat: %.4f, Lon: %.4f", lat, lon))
+                    }
+                } else {
+                    Toast.makeText(this, "Gagal deteksi lokasi. Pastikan GPS aktif.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: SecurityException) {
+            Toast.makeText(this, "Izin lokasi diperlukan", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -286,22 +376,68 @@ class SellCarActivity : AppCompatActivity() {
     }
 
     private fun validateInputs(): Boolean {
+        // 1. Cek Foto
         if (selectedImageUris.isEmpty() && existingImageUrls.isEmpty()) {
             Toast.makeText(this, "Wajib upload minimal 1 foto!", Toast.LENGTH_SHORT).show()
             return false
         }
+
+        // 2. Cek Input
         if (binding.etBrand.text.isNullOrBlank()) {
             binding.etBrand.error = "Wajib diisi"
+            return false
+        }
+        if (binding.etModel.text.isNullOrBlank()) {
+            binding.etModel.error = "Wajib diisi"
+            return false
+        }
+        if (binding.etYear.text.isNullOrBlank()) {
+            binding.etYear.error = "Wajib diisi"
             return false
         }
         if (binding.etPrice.text.isNullOrBlank()) {
             binding.etPrice.error = "Wajib diisi"
             return false
         }
-        if (binding.actColorCategory.text.isNullOrBlank()) {
-            binding.actColorCategory.error = "Wajib pilih kategori"
+        if (binding.etLocation.text.isNullOrBlank()) {
+            binding.etLocation.error = "Wajib diisi"
             return false
         }
+        if (binding.etSellerName.text.isNullOrBlank()) {
+            binding.etSellerName.error = "Wajib diisi"
+            return false
+        }
+        if (binding.etSellerContact.text.isNullOrBlank()) {
+            binding.etSellerContact.error = "Wajib diisi"
+            return false
+        }
+
+        if (binding.actSellerType.text.isNullOrBlank()) {
+            binding.actSellerType.error = "Pilih tipe penjual"
+            binding.actSellerType.requestFocus()
+            return false
+        }
+        if (binding.actColorCategory.text.isNullOrBlank()) {
+            binding.actColorCategory.error = "Pilih kategori warna"
+            binding.actColorCategory.requestFocus()
+            return false
+        }
+        if (binding.actFuelType.text.isNullOrBlank()) {
+            binding.actFuelType.error = "Pilih bahan bakar"
+            binding.actFuelType.requestFocus()
+            return false
+        }
+        if (binding.actTransmission.text.isNullOrBlank()) {
+            binding.actTransmission.error = "Pilih transmisi"
+            binding.actTransmission.requestFocus()
+            return false
+        }
+        if (binding.actBodyType.text.isNullOrBlank()) {
+            binding.actBodyType.error = "Pilih tipe bodi"
+            binding.actBodyType.requestFocus()
+            return false
+        }
+
         return true
     }
 
@@ -333,15 +469,6 @@ class SellCarActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadUserData() {
-        auth.currentUser?.let { user ->
-            db.collection("users").document(user.uid).get().addOnSuccessListener {
-                binding.etSellerName.setText(it.getString("name"))
-                binding.etSellerContact.setText(it.getString("phone"))
-            }
-        }
-    }
-
     private fun setupDropdowns() {
         val sellerTypes = arrayOf("Individu", "Diler")
         val fuelTypes = arrayOf("Bensin", "Diesel", "Listrik", "Hybrid")
@@ -350,7 +477,6 @@ class SellCarActivity : AppCompatActivity() {
 
         val colorCategories = arrayOf("Hitam", "Putih", "Silver", "Abu-abu", "Merah", "Biru", "Hijau", "Kuning", "Coklat", "Oranye", "Gold", "Ungu", "Lainnya")
 
-        // GANTI KE SIMPLE_LIST_ITEM_1
         binding.actSellerType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, sellerTypes))
         binding.actFuelType.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, fuelTypes))
         binding.actTransmission.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, transmissions))

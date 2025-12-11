@@ -17,7 +17,7 @@
             android:id="@+id/toolbarMatch"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="Cari Mobil Impian 🔥"
+            app:title="Smart Match💫"
             app:titleTextColor="@color/black"
             app:titleCentered="true"
             app:navigationIcon="@drawable/ic_arrow_back"
@@ -44,6 +44,7 @@
         android:gravity="center_horizontal"
         android:visibility="gone"
         android:padding="16dp"
+        android:background="@color/white"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,27 +72,61 @@
             android:layout_weight="1"
             android:layout_marginVertical="8dp"/>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEE"
+            android:layout_marginBottom="8dp"/>
+
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:gravity="center"
+            android:weightSum="3">
 
-            <Button
-                android:id="@+id/btnBackHome"
-                android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNavHome"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Kembali"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_marginEnd="8dp"/>
+                android:layout_weight="1"
+                android:text="Home"
+                android:textSize="12sp"
+                android:textColor="@color/blue"
+                app:icon="@drawable/ic_home"
+                app:iconGravity="textTop"
+                app:iconTint="@color/blue"
+                app:iconSize="24dp"/>
 
-            <Button
-                android:id="@+id/btnReset"
-                android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNavReset"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Mulai Lagi"
-                android:backgroundTint="@color/accent_pink"
-                android:textColor="@color/white"/>
+                android:layout_weight="1"
+                android:text="Ulang"
+                android:textSize="12sp"
+                android:textColor="@color/black"
+                app:icon="@drawable/ic_refresh"
+                app:iconGravity="textTop"
+                app:iconTint="@color/black"
+                app:iconSize="24dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNavWishlist"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Wishlist"
+                android:textSize="12sp"
+                android:textColor="@color/accent_pink"
+                app:icon="@drawable/ic_wishlist"
+                app:iconGravity="textTop"
+                app:iconTint="@color/accent_pink"
+                app:iconSize="24dp"/>
+
         </LinearLayout>
     </LinearLayout>
 
@@ -140,5 +175,51 @@
             app:elevation="2dp"
             android:layout_marginStart="24dp"/>
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/left_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80FF0000"
+        android:visibility="gone">
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_close"
+            android:layout_gravity="center"
+            app:tint="@color/white"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SKIP"
+            android:textColor="@color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginTop="60dp"/>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/right_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#8000FF00"
+        android:visibility="gone">
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_wishlist"
+            android:layout_gravity="center"
+            app:tint="@color/white"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LIKE"
+            android:textColor="@color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            android:layout_marginTop="60dp"/>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

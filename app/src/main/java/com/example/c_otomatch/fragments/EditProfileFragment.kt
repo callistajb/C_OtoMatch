@@ -11,6 +11,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.location.Geocoder
+import java.util.Locale
 import android.widget.*
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +26,8 @@ import com.cloudinary.android.callback.UploadCallback
 import com.example.c_otomatch.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -76,16 +80,42 @@ class EditProfileFragment : Fragment() {
     ) { granted ->
         if (granted) {
             try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                Toast.makeText(requireContext(), "Mencari lokasi...", Toast.LENGTH_SHORT).show()
+
+                fusedLocationClient.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    null
+                ).addOnSuccessListener { location ->
                     if (location != null) {
                         val lat = location.latitude
                         val lon = location.longitude
-                        etLocation.setText(String.format("Lat: %.6f, Lon: %.6f", lat, lon))
+
+                        try {
+                            val geocoder = Geocoder(requireContext(), Locale.getDefault())
+
+                            @Suppress("DEPRECATION")
+                            val addresses = geocoder.getFromLocation(lat, lon, 1)
+
+                            if (!addresses.isNullOrEmpty()) {
+                                val address = addresses[0]
+                                val city = address.locality ?: address.subAdminArea
+                                val state = address.adminArea
+                                val country = address.countryName
+
+                                val locationString = listOfNotNull(city, state, country).joinToString(", ")
+                                etLocation.setText(locationString)
+                            } else {
+                                etLocation.setText(String.format("Lat: %.4f, Lon: %.4f", lat, lon))
+                            }
+                        } catch (e: Exception) {
+                            Log.e("EditProfileFragment", "Geocoding failed", e)
+                            etLocation.setText(String.format("Lat: %.4f, Lon: %.4f", lat, lon))
+                        }
                     } else {
-                        Toast.makeText(requireContext(), "Gagal mendapatkan lokasi", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Gagal mendapatkan lokasi (Coba buka Google Maps dulu di emulator)", Toast.LENGTH_LONG).show()
                     }
                 }.addOnFailureListener {
-                    Toast.makeText(requireContext(), "Gagal mendapatkan lokasi", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Gagal request lokasi", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: SecurityException) {
                 Toast.makeText(requireContext(), "Izin lokasi tidak diberikan", Toast.LENGTH_SHORT).show()
@@ -102,10 +132,6 @@ class EditProfileFragment : Fragment() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
-
-        // --- HAPUS INI (MediaManager.init) KARENA UDAH DI MyApplication ---
-        // MediaManager.init(requireContext(), hashMapOf("cloud_name" to CLOUD_NAME))
-        // ------------------------------------------------------------------
 
         progressDialog = ProgressDialog(requireContext()).apply {
             setTitle("Menyimpan...")
@@ -158,7 +184,6 @@ class EditProfileFragment : Fragment() {
             }
     }
 
-    // ... (Fungsi showPhotoChooser, saveBitmap, showChangePasswordDialog TIDAK BERUBAH) ...
     private fun showPhotoChooser() {
         val options = arrayOf("Ambil Foto (Kamera)", "Pilih dari Galeri")
         AlertDialog.Builder(requireContext())

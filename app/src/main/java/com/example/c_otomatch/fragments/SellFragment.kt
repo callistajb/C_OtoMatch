@@ -54,7 +54,7 @@ class SellFragment : Fragment() {
         adapter = CarAdapter(
             myCarsList,
             { car -> showCarOptionsDialog(car) },
-            { car -> toggleSoldStatus(car) }, // Aksi tombol Sold
+            { car -> toggleSoldStatus(car) },
             isSellFragment = true
         )
 
@@ -79,7 +79,6 @@ class SellFragment : Fragment() {
             return
         }
 
-        // Ambil SEMUA mobil (Sold & Not Sold) milik user
         db.collection("cars")
             .whereEqualTo("sellerUid", user.uid)
             .get(Source.SERVER)
@@ -88,7 +87,7 @@ class SellFragment : Fragment() {
                 for (document in result) {
                     try {
                         val car = document.toObject(Car::class.java)
-                        car.documentId = document.id // PENTING
+                        car.documentId = document.id
                         myCarsList.add(car)
                     } catch (e: Exception) {
                         Log.e("SellFragment", "Error converting car", e)
@@ -148,16 +147,13 @@ class SellFragment : Fragment() {
     }
 
     private fun toggleSoldStatus(car: Car) {
-        val newStatus = !car.isSold // Status kebalikan
+        val newStatus = !car.isSold
 
-        // 1. Update ke Firestore
         db.collection("cars").document(car.documentId)
             .update("isSold", newStatus)
             .addOnSuccessListener {
 
-                // 2. UPDATE LOGIC TRANSAKSI (TETAP ADA)
                 if (newStatus) {
-                    // Jika jadi SOLD, tambah transaksi
                     val transactionData = hashMapOf<String, Any?>(
                         "carId" to car.documentId,
                         "carName" to car.name,
@@ -169,7 +165,6 @@ class SellFragment : Fragment() {
                     )
                     db.collection("transactions").add(transactionData)
                 } else {
-                    // Jika jadi AVAILABLE, batalkan transaksi
                     db.collection("transactions")
                         .whereEqualTo("carId", car.documentId)
                         .whereEqualTo("transactionStatus", "COMPLETED")
@@ -184,8 +179,6 @@ class SellFragment : Fragment() {
                         }
                 }
 
-                // 3. UPDATE LOCAL DATA AGAR UI TIDAK BALIK LAGI
-                // Kita harus update object car yang ada di list memory
                 car.isSold = newStatus
 
                 // Sort ulang list agar yang terjual turun ke bawah
@@ -202,7 +195,7 @@ class SellFragment : Fragment() {
             }
     }
 
-    // Fungsi Transaction (TETAP ADA)
+    // Fungsi Transaction
     private fun deleteTransaction(carId: String, enableRollback: Boolean) {
         db.collection("transactions")
             .whereEqualTo("carId", carId)

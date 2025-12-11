@@ -64,7 +64,6 @@ class CarDetailActivity : AppCompatActivity() {
             tvCarLocationDetail.text = "Lokasi: ${intent.getStringExtra("car_location").orEmpty()}"
             tvSellerDetail.text = "Penjual: ${intent.getStringExtra("seller_name").orEmpty()}"
 
-            // --- FIX: Gunakan orEmpty() sebelum ifEmpty ---
             tvContactDetail.text = intent.getStringExtra("seller_contact").orEmpty().ifEmpty { "Tidak tersedia" }
 
             tvVariantDetail.text = "Varian: ${intent.getStringExtra("variant").orEmpty().ifEmpty { "-" }}"
