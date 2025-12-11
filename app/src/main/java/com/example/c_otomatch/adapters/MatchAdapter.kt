@@ -40,7 +40,7 @@ class MatchAdapter(
         Glide.with(holder.itemView.context)
             .load(imgUrl)
             .placeholder(R.drawable.ic_car)
-            .centerCrop() // GUNAKAN INI LAGI agar full screen card
+            .centerCrop()
             .into(holder.imgCard)
 
         holder.name.text = car.name
