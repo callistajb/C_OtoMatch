@@ -6,7 +6,8 @@
     android:layout_margin="12dp"
     app:cardCornerRadius="24dp"
     app:cardElevation="8dp"
-    app:cardBackgroundColor="#1A1A1A"> <androidx.constraintlayout.widget.ConstraintLayout
+    app:cardBackgroundColor="#1A1A1A">
+    <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -14,7 +15,7 @@
         android:id="@+id/imgCard"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitCenter"
+        android:scaleType="centerCrop"
         android:adjustViewBounds="true"
         android:src="@drawable/ic_car"
         app:layout_constraintTop_toTopOf="parent"

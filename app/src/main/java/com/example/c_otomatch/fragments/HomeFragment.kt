@@ -1,6 +1,5 @@
 package com.example.c_otomatch.fragments
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager // GANTI INI
 import androidx.recyclerview.widget.RecyclerView
 import com.example.c_otomatch.CarDetailActivity
 import com.example.c_otomatch.MatchActivity
@@ -56,7 +55,7 @@ class HomeFragment : Fragment() {
         spinnerSort = view.findViewById(R.id.spinnerSort)
         switchMyCars = view.findViewById(R.id.switchMyCars)
 
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
         adapter = CarAdapter(
             displayedCarList,

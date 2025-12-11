@@ -143,8 +143,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:backgroundTint="@color/blue"
-                    android:text="🧮 Simulasi Kredit"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:text="🧮 Hitung Cicilan Kredit"
                     android:textColor="@color/white"
                     app:strokeColor="@color/blue"/>
 

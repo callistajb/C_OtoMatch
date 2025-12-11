@@ -36,12 +36,11 @@ class MatchAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val car = cars[position]
 
-        // Load Gambar
         val imgUrl = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
         Glide.with(holder.itemView.context)
             .load(imgUrl)
             .placeholder(R.drawable.ic_car)
-            .centerCrop()
+            .centerCrop() // GUNAKAN INI LAGI agar full screen card
             .into(holder.imgCard)
 
         holder.name.text = car.name
@@ -51,7 +50,6 @@ class MatchAdapter(
             onItemClickListener?.invoke(car)
         }
 
-        // Format detail: "2020 • SUV • Bensin"
         val detailText = listOf(car.year.toString(), car.bodyType, car.fuel)
             .filter { it.isNotEmpty() && it != "0" }
             .joinToString(" • ")

@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.c_otomatch.CarDetailActivity
 import com.example.c_otomatch.R
@@ -44,7 +44,7 @@ class WishlistFragment : Fragment() {
 
         tvEmpty = view.findViewById(R.id.tvEmptyWishlist)
         recyclerView = view.findViewById(R.id.rvWishlist)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
         adapter = CarAdapter(
             carList = wishlistCars,
@@ -96,7 +96,7 @@ class WishlistFragment : Fragment() {
                 if (document != null && document.exists()) {
                     val wishlistIds = document.get("wishlist") as? List<String>
 
-                    // PENTING: Update juga list ID di adapter agar icon love menyala merah
+                    // Update juga list ID di adapter agar icon love menyala merah
                     if (wishlistIds != null) {
                         adapter.updateWishlist(wishlistIds)
                     }
@@ -123,8 +123,6 @@ class WishlistFragment : Fragment() {
             return
         }
 
-        // --- SOLUSI LIMIT 10 ITEM FIRESTORE ---
-        // Kita pecah list ID menjadi beberapa bagian (chunk), masing-masing max 10 ID
         val chunks = carIds.chunked(10)
         val tasks = chunks.map { chunk ->
             db.collection("cars")
@@ -132,12 +130,10 @@ class WishlistFragment : Fragment() {
                 .get()
         }
 
-        // Jalankan semua query secara paralel
         Tasks.whenAllSuccess<QuerySnapshot>(tasks)
             .addOnSuccessListener { results ->
                 wishlistCars.clear()
 
-                // Gabungkan hasil dari semua chunk
                 for (snapshot in results) {
                     for (document in snapshot) {
                         try {
