@@ -77,6 +77,7 @@ class CarDetailActivity : AppCompatActivity() {
 
         val thumbUrl = intent.getStringExtra("car_image_url").orEmpty()
         setupImageSlider(thumbUrl)
+
         if (carDocumentId != null) {
             db.collection("cars").document(carDocumentId!!).get()
                 .addOnSuccessListener { document ->
@@ -137,18 +138,30 @@ class CarDetailActivity : AppCompatActivity() {
     }
 
     private fun setupImageSlider(thumbnailUrl: String) {
-        val initialList = if (thumbnailUrl.isNotEmpty()) listOf(thumbnailUrl) else emptyList()
+        // PERBAIKAN: Menggunakan ArrayList<Any> agar sesuai dengan tipe MutableList<Any> di Adapter
+        val initialList = ArrayList<Any>()
+        if (thumbnailUrl.isNotEmpty()) {
+            initialList.add(thumbnailUrl)
+        }
+
+        // Di Detail Activity, kita tidak perlu fitur hapus (onLongClick null)
         val adapter = ImageSliderAdapter(initialList)
+
         binding.vpDetailImages.adapter = adapter
         binding.tvImageCount.text = if (initialList.isNotEmpty()) "1/1" else "0/0"
     }
 
     private fun updateSliderWithFullData(car: Car) {
-        val images = if (car.imageUrls.isNotEmpty()) car.imageUrls else listOf(car.imageUrl)
-        if (images.isNotEmpty() && images[0].isNotEmpty()) {
+        val rawImages = if (car.imageUrls.isNotEmpty()) car.imageUrls else listOf(car.imageUrl)
+
+        if (rawImages.isNotEmpty() && rawImages[0].isNotEmpty()) {
+            // PERBAIKAN: Konversi dari List<String> ke MutableList<Any>
+            val images = ArrayList<Any>(rawImages)
+
             val adapter = ImageSliderAdapter(images)
             binding.vpDetailImages.adapter = adapter
             binding.tvImageCount.text = "1/${images.size}"
+
             binding.vpDetailImages.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     binding.tvImageCount.text = "${position + 1}/${images.size}"

@@ -139,6 +139,7 @@
                 android:layout_height="1dp"
                 android:background="@color/light_gray"
                 android:layout_marginVertical="16dp"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -147,27 +148,62 @@
                 android:textColor="@color/blue"/>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etBrand"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                <AutoCompleteTextView
+                    android:id="@+id/actBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Merek (wajib)" />
+                    android:hint="Merek (Ketik untuk cari...)"
+                    android:inputType="textCapWords"
+                    android:completionThreshold="1"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilManualBrand"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:visibility="gone"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etModel"
+                    android:id="@+id/etManualBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Model / Tipe" />
+                    android:hint="Tulis Merek Mobil (Manual)" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilModel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                <AutoCompleteTextView
+                    android:id="@+id/actModel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Model (Pilih Merek dulu)"
+                    android:inputType="textCapWords"
+                    android:completionThreshold="1"
+                    android:enabled="false"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilManualModel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etManualModel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tulis Model Mobil (Manual)" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -206,12 +242,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etLocation"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                    <AutoCompleteTextView
+                        android:id="@+id/actLocation"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Lokasi" />
+                        android:hint="Lokasi (Kota/Kab)"
+                        android:inputType="textCapWords"
+                        android:completionThreshold="1"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <Button
@@ -222,6 +260,7 @@
                     android:text="📍"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -254,7 +293,7 @@
                         android:id="@+id/etExactColor"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Warna Spesifik (Opsional)" />
+                        android:hint="Warna Spesifik" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
@@ -399,7 +438,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Generate Saran Harga" />
+                android:text="Generate Saran Harga (AI)" />
             <TextView
                 android:id="@+id/tvGeneratedPrice"
                 android:layout_width="match_parent"
