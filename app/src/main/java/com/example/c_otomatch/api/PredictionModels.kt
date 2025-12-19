@@ -16,5 +16,7 @@ data class PredictionResponse(
     @SerializedName("status") val status: String,
     @SerializedName("predicted_price") val predictedPrice: Double,
     @SerializedName("formatted_price") val formattedPrice: String,
+    @SerializedName("corrected_brand") val correctedBrand: String? = null,
+    @SerializedName("corrected_model") val correctedModel: String? = null,
     @SerializedName("message") val message: String? = null
 )

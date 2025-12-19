@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.example.c_otomatch.databinding.ActivitySplashBinding
+import com.example.c_otomatch.utils.Data // Import Data
 import com.google.firebase.auth.FirebaseAuth
 
 class SplashActivity : AppCompatActivity() {
@@ -19,6 +20,8 @@ class SplashActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = FirebaseAuth.getInstance()
+
+        //Data.uploadDataToFirebase()
 
         binding.logoImage.startAnimation(
             android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in)

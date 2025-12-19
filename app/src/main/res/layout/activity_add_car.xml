@@ -40,19 +40,50 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Foto Mobil (Maksimal 10)"
+                android:text="Foto Mobil (Wajib)"
                 android:textStyle="bold"
                 android:textColor="@color/blue"
                 android:layout_marginBottom="8dp"/>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvSelectedImages"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="180dp"
-                android:orientation="horizontal"
-                android:background="@drawable/bg_image_border"
-                android:padding="4dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                android:background="@drawable/bg_image_border">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSelectedImages"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:padding="4dp"
+                    android:clipToPadding="false"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+                <LinearLayout
+                    android:id="@+id/llPhotoPlaceholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="#CCCCCC"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ketuk untuk upload foto"
+                        android:textColor="#CCCCCC"
+                        android:textSize="12sp"
+                        android:layout_marginTop="8dp"/>
+                </LinearLayout>
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tvPhotoCount"
@@ -157,7 +188,7 @@
                     android:id="@+id/actBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Merek (Ketik untuk cari...)"
+                    android:hint="Merek"
                     android:inputType="textCapWords"
                     android:completionThreshold="1"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -186,7 +217,7 @@
                     android:id="@+id/actModel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Model (Pilih Merek dulu)"
+                    android:hint="Model"
                     android:inputType="textCapWords"
                     android:completionThreshold="1"
                     android:enabled="false"/>
@@ -206,31 +237,58 @@
                     android:hint="Tulis Model Mobil (Manual)" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etYear"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Tahun"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:layout_marginTop="8dp">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etMileage"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Jarak Tempuh (km)"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="4dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etYear"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Tahun"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:cursorVisible="false"
+                            android:drawableEnd="@drawable/ic_sort" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <NumberPicker
+                        android:id="@+id/npYear"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:visibility="gone"
+                        android:background="#F5F5F5"
+                        android:theme="@style/Theme.C_OtoMatch"/>
+                </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etMileage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Kilometer (km)"
+                        android:inputType="number" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -247,7 +305,7 @@
                         android:id="@+id/actLocation"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Lokasi (Kota/Kab)"
+                        android:hint="Lokasi"
                         android:inputType="textCapWords"
                         android:completionThreshold="1"/>
                 </com.google.android.material.textfield.TextInputLayout>
@@ -277,7 +335,7 @@
                         android:id="@+id/actColorCategory"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Kategori Warna"
+                        android:hint="Warna Dasar"
                         android:inputType="none"
                         android:focusable="false"
                         android:cursorVisible="false"/>
@@ -302,10 +360,11 @@
                 android:layout_height="1dp"
                 android:background="@color/light_gray"
                 android:layout_marginVertical="16dp"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Spesifikasi (Pilihan)"
+                android:text="Spesifikasi Detail"
                 android:textStyle="bold"
                 android:textColor="@color/blue"/>
 
@@ -318,53 +377,171 @@
                     android:id="@+id/etVariant"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Varian" />
+                    android:hint="Varian (misal RS, Prestige, TRD)" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bahan Bakar"
+                android:textSize="12sp"
+                android:textColor="#666"
+                android:layout_marginTop="12dp"/>
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cgFuel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-                <AutoCompleteTextView
-                    android:id="@+id/actFuelType"
-                    android:layout_width="match_parent"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipBensin"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="Bahan Bakar"
-                    android:inputType="none"
-                    android:focusable="false"
-                    android:cursorVisible="false" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="Bensin" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDiesel"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="Diesel" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipListrik"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="Listrik" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipHybrid"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="Hybrid" />
+            </com.google.android.material.chip.ChipGroup>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Transmisi"
+                android:textSize="12sp"
+                android:textColor="#666"
+                android:layout_marginTop="8dp"/>
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cgTransmission"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-                <AutoCompleteTextView
-                    android:id="@+id/actTransmission"
-                    android:layout_width="match_parent"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipManual"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="Transmisi"
-                    android:inputType="none"
-                    android:focusable="false"
-                    android:cursorVisible="false" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="Manual" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipAutomatic"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="Automatic" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipCVT"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipBackgroundColor="@color/chip_bg_state"
+                    android:textColor="@color/chip_text_state"
+                    android:text="CVT" />
+            </com.google.android.material.chip.ChipGroup>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipe Bodi"
+                android:textSize="12sp"
+                android:textColor="#666"
+                android:layout_marginTop="8dp"/>
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-                <AutoCompleteTextView
-                    android:id="@+id/actBodyType"
-                    android:layout_width="match_parent"
+                android:scrollbars="none">
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/cgBody"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="Tipe Bodi"
-                    android:inputType="none"
-                    android:focusable="false"
-                    android:cursorVisible="false" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    app:singleLine="true"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="SUV" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="MPV" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="Sedan" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="Hatchback" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="Coupe" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="Van" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="Pickup" />
+                    <com.google.android.material.chip.Chip
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipBackgroundColor="@color/chip_bg_state"
+                        android:textColor="@color/chip_text_state"
+                        android:text="LCGC" />
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -379,33 +556,99 @@
                     android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etNegatives"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Minus"
-                    android:inputType="textMultiLine"
-                    android:minLines="2"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etMods"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Modifikasi"
-                    android:inputType="textMultiLine"
-                    android:minLines="2"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etNegatives"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Minus (Kosongkan jika mulus)"
+                        android:inputType="textMultiLine"
+                        android:minLines="2"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutMinusEvidence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="8dp"
+                    android:visibility="gone">
+                    <ImageView
+                        android:id="@+id/imgMinusEvidence"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="@drawable/bg_image_border"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/gray"
+                        android:scaleType="centerInside"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Upload Bukti Minus"
+                        android:layout_marginStart="12dp"
+                        android:textColor="@color/red"
+                        android:textSize="12sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etMods"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Modifikasi (Kosongkan jika standar)"
+                        android:inputType="textMultiLine"
+                        android:minLines="2"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutModEvidence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="8dp"
+                    android:visibility="gone">
+                    <ImageView
+                        android:id="@+id/imgModEvidence"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="@drawable/bg_image_border"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/gray"
+                        android:scaleType="centerInside"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Upload Bukti Modifikasi"
+                        android:layout_marginStart="12dp"
+                        android:textColor="@color/green"
+                        android:textSize="12sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"

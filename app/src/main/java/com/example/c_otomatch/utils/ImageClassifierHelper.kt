@@ -11,7 +11,6 @@ import java.io.IOException
 class ImageClassifierHelper(
     val context: Context,
     val onError: (String) -> Unit,
-    // Callback: (IsCar, DetectedObjectName)
     val onResult: (Boolean, String) -> Unit
 ) {
     private var imageClassifier: ImageClassifier? = null
@@ -23,14 +22,12 @@ class ImageClassifierHelper(
     private fun setupImageClassifier() {
         val baseOptionsBuilder = BaseOptions.builder().setNumThreads(2)
 
-        // Kita ambil 1 hasil teratas saja yang paling mirip
         val optionsBuilder = ImageClassifierOptions.builder()
             .setBaseOptions(baseOptionsBuilder.build())
-            .setMaxResults(1)
-            .setScoreThreshold(0.4f) // Minimal yakin 40%
+            .setMaxResults(3)
+            .setScoreThreshold(0.3f)
 
         try {
-            // Pastikan nama file sama dengan di assets
             imageClassifier = ImageClassifier.createFromFileAndOptions(
                 context,
                 "mobilenet_v1_1.0_224_quant.tflite",
@@ -47,31 +44,38 @@ class ImageClassifierHelper(
         if (imageClassifier == null) setupImageClassifier()
 
         if (imageClassifier == null) {
-            onResult(true, "Model Error") // Loloskan jika error
+            onResult(true, "Model Error")
             return
         }
 
         val tensorImage = TensorImage.fromBitmap(bitmap)
         val results = imageClassifier?.classify(tensorImage)
 
-        // Daftar kata kunci yang dianggap MOBIL
         val carKeywords = listOf(
             "sports car", "minivan", "convertible", "cab", "racer", "jeep",
             "limousine", "beach wagon", "station wagon", "pickup", "ambulance",
             "police van", "tow truck", "trailer truck", "fire engine", "motor scooter",
-            "moped", "car", "vehicle", "taxi", "bus", "truck", "recreational vehicle"
+            "moped", "car", "vehicle", "taxi", "bus", "truck", "recreational vehicle",
+            "landrover", "off-road", "suv", "mpv", "sedan", "hatchback", "coupe",
+            "motorcycle", "van", "minibus", "trolleybus", "go-kart", "golfcart",
+
+            "grille", "radiator", "wheel", "tire", "windshield", "bumper",
+            "headlight", "steering wheel", "seat belt", "car mirror", "wing mirror",
+            "license plate", "traffic light", "parking meter", "gas pump", "speedometer"
         )
 
         var isCar = false
         var detectedObject = "Tidak dikenali"
 
         if (!results.isNullOrEmpty() && results[0].categories.isNotEmpty()) {
-            val topCategory = results[0].categories[0]
-            detectedObject = topCategory.label // Ambil nama labelnya saja (tanpa skor)
+            for (category in results[0].categories) {
+                val label = category.label.lowercase()
+                detectedObject = category.label
 
-            // Cek apakah label mengandung kata kunci mobil
-            if (carKeywords.any { detectedObject.contains(it, ignoreCase = true) }) {
-                isCar = true
+                if (carKeywords.any { label.contains(it, ignoreCase = true) }) {
+                    isCar = true
+                    break
+                }
             }
         }
 

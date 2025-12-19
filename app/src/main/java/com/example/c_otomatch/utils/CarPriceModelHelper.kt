@@ -6,29 +6,31 @@ import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import kotlin.math.ln1p
 
 class CarPriceModelHelper(context: Context) {
 
     private var interpreter: Interpreter? = null
 
-    // Statistik Data (Sesuaikan dengan Python)
-    private val inputMean = floatArrayOf(9.0012f, 2010.3407f, 69833.2891f, 1759.5483f)
-    private val inputStd = floatArrayOf(8.4220f, 6.8284f, 53955.9141f, 577.9158f)
+    private val inputMean = floatArrayOf(24.5f, 2014.2f, 65000.0f, 1800.0f)
+    private val inputStd = floatArrayOf(15.2f, 5.5f, 40000.0f, 600.0f)
 
     private val brandMap = mapOf(
-        "Honda" to 0f, "Toyota" to 1f, "Daihatsu" to 2f, "Suzuki" to 3f, "Mazda" to 4f,
-        "BMW" to 5f, "Nissan" to 6f, "Mercedes-Benz" to 7f, "Mitsubishi" to 8f,
-        "Chevrolet" to 9f, "Isuzu" to 10f, "Hyundai" to 11f, "Ford" to 12f,
-        "KIA" to 13f, "Datsun" to 14f, "Jeep" to 15f, "Volkswagen" to 16f,
-        "Land Rover" to 17f, "Lexus" to 18f, "Mini Cooper" to 19f, "Peugeot" to 20f,
-        "Wuling" to 21f, "Timor" to 22f, "Porsche" to 23f, "Proton" to 24f,
-        "Hino" to 25f, "Audi" to 26f, "Opel" to 27f, "Volvo" to 28f, "Subaru" to 29f,
-        "Chery" to 30f, "Klasik" to 31f, "Lainnya" to 32f, "Jaguar" to 33f,
-        "Fiat" to 34f, "Hummer" to 35f, "Dodge" to 36f, "Tata" to 37f,
-        "Holden" to 38f, "Smart" to 39f, "Lamborghini" to 40f, "Chrysler" to 41f,
-        "Ferrari" to 42f, "Geely" to 43f, "Cadillac" to 44f, "DFSK" to 45f,
-        "Renault" to 46f, "Bentley" to 47f, "Mobil CBU" to 48f, "Maserati" to 49f,
-        "Other" to 50f
+        "Toyota" to 0f, "Honda" to 1f, "Daihatsu" to 2f, "Suzuki" to 3f, "Mitsubishi" to 4f,
+        "Nissan" to 5f, "Mazda" to 6f, "Wuling" to 7f, "Hyundai" to 8f, "KIA" to 9f,
+        "BMW" to 10f, "Mercedes-Benz" to 11f, "Lexus" to 12f, "Audi" to 13f, "Chevrolet" to 14f,
+        "Ford" to 15f, "Isuzu" to 16f, "Datsun" to 17f, "Volkswagen" to 18f, "Peugeot" to 19f,
+        "Renault" to 20f, "Jeep" to 21f, "Land Rover" to 22f, "Mini" to 23f, "Subaru" to 24f,
+        "Volvo" to 25f, "Fiat" to 26f, "Porsche" to 27f, "Ferrari" to 28f, "Lamborghini" to 29f,
+        "Aston Martin" to 30f, "McLaren" to 31f, "Bentley" to 32f, "Rolls-Royce" to 33f,
+        "Maserati" to 34f, "Jaguar" to 35f, "Alfa Romeo" to 36f, "Tesla" to 37f, "Chery" to 38f,
+        "DFSK" to 39f, "MG" to 40f, "BYD" to 41f, "Geely" to 42f, "Proton" to 43f,
+        "Tata" to 44f, "Mahindra" to 45f, "Hino" to 46f, "Foton" to 47f, "Hummer" to 48f,
+        "Cadillac" to 49f, "Lincoln" to 50f, "Chrysler" to 51f, "Dodge" to 52f, "GMC" to 53f,
+        "Infiniti" to 54f, "Acura" to 55f, "Genesis" to 56f, "SsangYong" to 57f, "Timor" to 58f,
+        "Bimantara" to 59f, "Esemka" to 60f, "Opel" to 61f, "Daewoo" to 62f, "Holden" to 63f,
+        "Brabus" to 64f, "Alpina" to 65f, "Lotus" to 66f, "Smart" to 67f, "Citroen" to 68f,
+        "Other" to 69f
     )
 
     init {
@@ -51,7 +53,7 @@ class CarPriceModelHelper(context: Context) {
     fun predict(brand: String, year: Int, mileage: Int, capacity: Int): Float {
         if (interpreter == null) return 0f
 
-        val brandCode = brandMap[brand] ?: 50f
+        val brandCode = brandMap[brand] ?: brandMap["Other"]!!
 
         val normBrand = (brandCode - inputMean[0]) / inputStd[0]
         val normYear = (year.toFloat() - inputMean[1]) / inputStd[1]
@@ -65,11 +67,25 @@ class CarPriceModelHelper(context: Context) {
         inputs[0][3] = normCapacity
 
         val outputs = Array(1) { FloatArray(1) }
+
         interpreter?.run(inputs, outputs)
 
         var result = outputs[0][0]
+
         if (result < 0) result = 0f
-        return result
+
+
+        val luxuryMultiplier = when(brand) {
+            "Ferrari", "Lamborghini", "Rolls-Royce", "Bentley", "McLaren", "Aston Martin" -> 8.0f // Super Luxury
+            "Porsche", "Maserati", "Jaguar", "Land Rover", "Lexus", "Tesla", "Brabus" -> 3.5f // Luxury Sport
+            "Mercedes-Benz", "BMW", "Audi", "Volvo", "Jeep", "Mini", "Subaru" -> 1.8f // Premium
+            "Toyota", "Honda", "Mazda", "Mitsubishi", "Nissan", "Volkswagen" -> 1.1f // Middle-Up
+            else -> 1.0f
+        }
+
+        val ccMultiplier = if (capacity > 2500) 1.5f else if (capacity > 1800) 1.2f else 1.0f
+
+        return result * luxuryMultiplier * ccMultiplier
     }
 
     fun close() {
