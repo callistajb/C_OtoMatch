@@ -35,11 +35,7 @@ data class Car(
     var sellerUid: String = "",
 
     var bodyType: String = "",
-
-    // Kategori Warna (misal: "Merah") - Untuk Filter
     var color: String = "",
-
-    // Nama Warna Unik (misal: "Soul Red Crystal") - Untuk Tampilan
     var exactColor: String = "",
 
     var transmission: String = "",
@@ -49,6 +45,11 @@ data class Car(
     var negatives: String = "",
     var mods: String = "",
     var kmRange: String = "",
+
+    var taxStatus: String = "",
+    var taxDate: String = "",
+    var plateNumber: String = "",
+    var plateType: String = "",
 
     @ServerTimestamp
     val createdAt: Date? = null,

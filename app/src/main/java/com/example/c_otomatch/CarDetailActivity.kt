@@ -1,17 +1,18 @@
 package com.example.c_otomatch
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.viewpager2.widget.ViewPager2
 import com.example.c_otomatch.adapters.CommentAdapter
@@ -46,7 +47,13 @@ class CarDetailActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbarCarDetail)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
         binding.toolbarCarDetail.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+
+        // --- TOMBOL SHARE (BARU) ---
+        binding.btnShareHeader.setOnClickListener {
+            shareCarListing()
+        }
 
         carDocumentId = intent.getStringExtra("car_document_id")
         val carName = intent.getStringExtra("car_name").orEmpty()
@@ -54,44 +61,115 @@ class CarDetailActivity : AppCompatActivity() {
 
         carPriceLong = try {
             NumberTextWatcher.cleanDigits(carPrice).toLong()
-        } catch (e: Exception) { 0L }
+        } catch (e: Exception) {
+            0L
+        }
 
+        // --- SET TEXT AWAL ---
         binding.apply {
             tvCarNameDetail.text = carName
             tvCarBrandDetail.text = intent.getStringExtra("car_brand").orEmpty()
-            tvCarYearDetail.text = "Tahun: ${intent.getIntExtra("car_year", 0)}"
+
+            // Highlight Specs (Sekarang Label di Atas, Value di Bawah)
+            tvCarYearDetail.text = intent.getIntExtra("car_year", 0).toString()
+            tvKmRangeDetail.text = intent.getStringExtra("car_mileage").orEmpty()
+            tvTransmissionDetail.text =
+                intent.getStringExtra("transmission").orEmpty().ifEmpty { "-" }
+            tvFuelDetail.text = intent.getStringExtra("fuel").orEmpty().ifEmpty { "-" }
+
+            // Header Info
             tvCarPriceBadge.text = carPrice
-            tvCarLocationDetail.text = "Lokasi: ${intent.getStringExtra("car_location").orEmpty()}"
-            tvSellerDetail.text = "Penjual: ${intent.getStringExtra("seller_name").orEmpty()}"
+            tvCarLocationDetail.text = intent.getStringExtra("car_location").orEmpty()
 
-            tvContactDetail.text = intent.getStringExtra("seller_contact").orEmpty().ifEmpty { "Tidak tersedia" }
+            // Detail Table
+            tvVariantDetail.text = intent.getStringExtra("variant").orEmpty().ifEmpty { "-" }
+            tvBodyDetail.text = intent.getStringExtra("body_type").orEmpty().ifEmpty { "-" }
+            tvColorDetail.text = intent.getStringExtra("color").orEmpty().ifEmpty { "-" }
+            tvCapacityDetail.text = intent.getStringExtra("capacity").orEmpty().ifEmpty { "-" }
 
-            tvVariantDetail.text = "Varian: ${intent.getStringExtra("variant").orEmpty().ifEmpty { "-" }}"
-            tvBodyDetail.text = "Tipe: ${intent.getStringExtra("body_type").orEmpty().ifEmpty { "-" }}"
-            tvColorDetail.text = "Warna: ${intent.getStringExtra("color").orEmpty().ifEmpty { "-" }}"
-            tvTransmissionDetail.text = "Transmisi: ${intent.getStringExtra("transmission").orEmpty().ifEmpty { "-" }}"
-            tvFuelDetail.text = "Bahan Bakar: ${intent.getStringExtra("fuel").orEmpty().ifEmpty { "-" }}"
-            tvKmRangeDetail.text = "Jarak Tempuh: ${intent.getStringExtra("car_mileage").orEmpty().ifEmpty { "-" }}"
-            tvCapacityDetail.text = "Kapasitas Mesin: ${intent.getStringExtra("capacity").orEmpty().ifEmpty { "-" }}"
+            // Seller Info
+            tvSellerDetail.text = intent.getStringExtra("seller_name").orEmpty()
+            tvContactDetail.text =
+                intent.getStringExtra("seller_contact").orEmpty().ifEmpty { "Tidak tersedia" }
         }
 
         val thumbUrl = intent.getStringExtra("car_image_url").orEmpty()
         setupImageSlider(thumbUrl)
 
+        // --- FETCH DATA LENGKAP ---
         if (carDocumentId != null) {
-            db.collection("cars").document(carDocumentId!!).get()
-                .addOnSuccessListener { document ->
+            db.collection("cars").document(carDocumentId!!).get().addOnSuccessListener { document ->
                     val car = document.toObject(Car::class.java)
-                    if (car != null) updateSliderWithFullData(car)
+                    if (car != null) {
+                        updateSliderWithFullData(car)
+
+                        binding.apply {
+                            // 1. Pajak dengan Warna
+                            if (car.taxStatus == "Mati") {
+                                tvTaxInfoDetail.text = "Mati (s/d ${car.taxDate})"
+                                tvTaxInfoDetail.setTextColor(
+                                    ContextCompat.getColor(
+                                        this@CarDetailActivity, R.color.red
+                                    )
+                                )
+                            } else {
+                                tvTaxInfoDetail.text = "Hidup"
+                                tvTaxInfoDetail.setTextColor(
+                                    ContextCompat.getColor(
+                                        this@CarDetailActivity, R.color.green
+                                    )
+                                )
+                            }
+
+                            // 2. PLAT NOMOR VISUAL (SEKARANG DI BAWAH)
+                            if (car.plateNumber.isNotEmpty()) {
+                                layoutPlateDisplay.visibility = View.VISIBLE
+                                tvPlateDisplay.text = car.plateNumber
+                                tvPlateTypeDisplay.text = car.plateType
+                            } else {
+                                layoutPlateDisplay.visibility = View.GONE
+                            }
+                        }
+                    }
                 }
         }
 
         setupComments()
-        setupActionButtons(intent.getStringExtra("seller_contact").orEmpty(), carName, intent.getIntExtra("car_year", 0), carPrice)
+        setupActionButtons(
+            intent.getStringExtra("seller_contact").orEmpty(),
+            carName,
+            intent.getIntExtra("car_year", 0),
+            carPrice
+        )
 
         binding.btnCalculator.setOnClickListener {
             showLoanCalculatorDialog()
         }
+    }
+
+    private fun shareCarListing() {
+        val carName = binding.tvCarNameDetail.text.toString()
+        val carPrice = binding.tvCarPriceBadge.text.toString()
+        val carLoc = binding.tvCarLocationDetail.text.toString()
+
+        val shareText = """
+            Cek mobil ini di OtoMatch! 🚗💨
+            
+            *$carName*
+            Harga: $carPrice
+            Lokasi: $carLoc
+            
+            Tertarik? Yuk lihat detailnya di aplikasi OtoMatch!
+        """.trimIndent()
+
+        val sendIntent: Intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+
+        val shareIntent = Intent.createChooser(sendIntent, "Bagikan mobil via...")
+        startActivity(shareIntent)
     }
 
     private fun showLoanCalculatorDialog() {
@@ -106,9 +184,7 @@ class CarDetailActivity : AppCompatActivity() {
 
         etDP.addTextChangedListener(NumberTextWatcher(etDP))
 
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
         btnHitung.setOnClickListener {
             val dpString = NumberTextWatcher.cleanDigits(etDP.text.toString())
@@ -131,38 +207,32 @@ class CarDetailActivity : AppCompatActivity() {
             val totalHutang = pokokHutang + totalBunga
             val cicilanPerBulan = totalHutang / (years * 12)
 
-            tvResult.text = "Estimasi Cicilan:\n${NumberTextWatcher.formatToRupiah(cicilanPerBulan)} / bulan"
+            tvResult.text =
+                "Estimasi Cicilan:\n${NumberTextWatcher.formatToRupiah(cicilanPerBulan)} / bulan"
         }
-
         dialog.show()
     }
 
     private fun setupImageSlider(thumbnailUrl: String) {
-        // PERBAIKAN: Menggunakan ArrayList<Any> agar sesuai dengan tipe MutableList<Any> di Adapter
         val initialList = ArrayList<Any>()
         if (thumbnailUrl.isNotEmpty()) {
             initialList.add(thumbnailUrl)
         }
-
-        // Di Detail Activity, kita tidak perlu fitur hapus (onLongClick null)
         val adapter = ImageSliderAdapter(initialList)
-
         binding.vpDetailImages.adapter = adapter
         binding.tvImageCount.text = if (initialList.isNotEmpty()) "1/1" else "0/0"
     }
 
     private fun updateSliderWithFullData(car: Car) {
         val rawImages = if (car.imageUrls.isNotEmpty()) car.imageUrls else listOf(car.imageUrl)
-
         if (rawImages.isNotEmpty() && rawImages[0].isNotEmpty()) {
-            // PERBAIKAN: Konversi dari List<String> ke MutableList<Any>
             val images = ArrayList<Any>(rawImages)
-
             val adapter = ImageSliderAdapter(images)
             binding.vpDetailImages.adapter = adapter
             binding.tvImageCount.text = "1/${images.size}"
 
-            binding.vpDetailImages.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            binding.vpDetailImages.registerOnPageChangeCallback(object :
+                ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     binding.tvImageCount.text = "${position + 1}/${images.size}"
                 }
@@ -171,26 +241,30 @@ class CarDetailActivity : AppCompatActivity() {
     }
 
     private fun setupActionButtons(contact: String, name: String, year: Int, price: String) {
+        // Tombol Telepon (Icon di dalam Card)
         binding.btnContactSeller.setOnClickListener {
-            if (contact.isNotEmpty()) startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$contact")))
+            if (contact.isNotEmpty()) startActivity(
+                Intent(
+                    Intent.ACTION_DIAL, Uri.parse("tel:$contact")
+                )
+            )
             else Toast.makeText(this, "Nomor kontak tidak tersedia.", Toast.LENGTH_SHORT).show()
         }
+        // Tombol WA
         binding.btnWhatsapp.setOnClickListener {
             if (contact.isNotEmpty()) {
                 var phone = contact
                 if (phone.startsWith("0")) phone = "62" + phone.substring(1)
-                val msg = "Halo, saya tertarik dengan mobil *$name ($year)* yang dijual seharga *$price* di OtoMatch. Apakah unit masih tersedia?"
+                val msg =
+                    "Halo, saya tertarik dengan mobil *$name ($year)* yang dijual seharga *$price* di OtoMatch. Apakah unit masih tersedia?"
                 val url = "https://api.whatsapp.com/send?phone=$phone&text=${Uri.encode(msg)}"
-                try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
-                catch (e: Exception) { Toast.makeText(this, "Aplikasi WhatsApp tidak ditemukan.", Toast.LENGTH_SHORT).show() }
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Aplikasi WhatsApp tidak ditemukan.", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
-        }
-        binding.btnShare.setOnClickListener {
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, "Lihat mobil $name seharga $price ini di OtoMatch!")
-            }
-            startActivity(Intent.createChooser(shareIntent, "Bagikan lewat"))
         }
     }
 
@@ -207,11 +281,16 @@ class CarDetailActivity : AppCompatActivity() {
             val text = binding.etCommentInput.text.toString().trim()
             val rating = binding.ratingBarInput.rating
             if (auth.currentUser == null) {
-                Toast.makeText(this, "Silakan login untuk mengirim komentar.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Silakan login untuk mengirim komentar.", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
             if (text.isEmpty()) {
                 binding.etCommentInput.error = "Komentar tidak boleh kosong"
+                return@setOnClickListener
+            }
+            if (rating == 0f) {
+                Toast.makeText(this, "Mohon beri rating bintang", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             db.collection("users").document(auth.currentUser!!.uid).get().addOnSuccessListener {
@@ -224,6 +303,7 @@ class CarDetailActivity : AppCompatActivity() {
                         commentList.add(0, comment)
                         commentAdapter.notifyItemInserted(0)
                         binding.rvComments.scrollToPosition(0)
+                        updateAvgRating()
                         Toast.makeText(this, "Komentar terkirim.", Toast.LENGTH_SHORT).show()
                     }
             }
@@ -232,8 +312,7 @@ class CarDetailActivity : AppCompatActivity() {
 
     private fun loadComments(carId: String) {
         db.collection("cars").document(carId).collection("comments")
-            .orderBy("rating", Query.Direction.DESCENDING).get()
-            .addOnSuccessListener { result ->
+            .orderBy("rating", Query.Direction.DESCENDING).get().addOnSuccessListener { result ->
                 commentList.clear()
                 for (doc in result) commentList.add(doc.toObject(Comment::class.java))
                 commentAdapter.notifyDataSetChanged()
@@ -244,7 +323,9 @@ class CarDetailActivity : AppCompatActivity() {
     private fun updateAvgRating() {
         if (commentList.isNotEmpty()) {
             val avg = commentList.map { it.rating }.average()
-            binding.tvAvgRating.text = "Rating: %.1f ⭐".format(avg)
+            binding.tvAvgRating.text = "%.1f".format(avg)
+        } else {
+            binding.tvAvgRating.text = "0.0"
         }
     }
 }

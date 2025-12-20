@@ -2,33 +2,66 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:layout_marginBottom="8dp"
-    android:background="@drawable/comment_bg">
+    android:orientation="horizontal"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="4dp">
 
-    <TextView
-        android:id="@+id/tvUserName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="User"
-        android:textStyle="bold"
-        android:textSize="16sp" />
+    <ImageView
+        android:id="@+id/imgUserAvatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_person"
+        android:background="@drawable/circle_bg"
+        android:padding="8dp"
+        android:contentDescription="Avatar"
+        app:tint="#555555"
+        xmlns:app="http://schemas.android.com/apk/res-auto"/>
 
-    <RatingBar
-        android:id="@+id/ratingBar"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:numStars="5"
-        android:stepSize="1.0"
-        android:isIndicator="true"
-        android:layout_marginTop="2dp" />
+        android:orientation="vertical"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_comment_card"
+        android:padding="12dp"
+        android:elevation="1dp">
 
-    <TextView
-        android:id="@+id/tvComment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Komentar user di sini"
-        android:textSize="15sp"
-        android:layout_marginTop="4dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Nama User"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/black"/>
+
+            <RatingBar
+                android:id="@+id/ratingBar"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:progressTint="#FFD700"
+                android:secondaryProgressTint="@android:color/transparent"
+                android:rating="5"
+                android:isIndicator="true"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvComment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Isi komentar user..."
+            android:textSize="14sp"
+            android:textColor="#333333"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="2dp"/>
+    </LinearLayout>
 </LinearLayout>
