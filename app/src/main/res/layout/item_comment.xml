@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -13,9 +14,7 @@
         android:src="@drawable/ic_person"
         android:background="@drawable/circle_bg"
         android:padding="8dp"
-        android:contentDescription="Avatar"
-        app:tint="#555555"
-        xmlns:app="http://schemas.android.com/apk/res-auto"/>
+        android:contentDescription="Avatar" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -41,6 +40,18 @@
                 android:textStyle="bold"
                 android:textSize="14sp"
                 android:textColor="@color/black"/>
+
+            <ImageView
+                android:id="@+id/btnDeleteComment"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="#D32F2F"
+                android:visibility="gone"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Hapus Komentar"
+                android:layout_marginEnd="8dp"/>
 
             <RatingBar
                 android:id="@+id/ratingBar"

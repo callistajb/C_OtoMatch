@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -37,9 +36,9 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="80dp"
-                    android:background="@drawable/gradient_bottom"
                     android:layout_gravity="top"
-                    android:rotation="180"/>
+                    android:background="@drawable/gradient_bottom"
+                    android:rotation="180" />
 
                 <View
                     android:layout_width="match_parent"
@@ -66,24 +65,24 @@
                 android:id="@+id/toolbarCarDetail"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent"
                 app:layout_collapseMode="pin"
                 app:navigationIcon="@drawable/ic_arrow_back"
-                app:navigationIconTint="@android:color/white"
-                android:background="@android:color/transparent">
+                app:navigationIconTint="@android:color/white">
 
                 <ImageView
                     android:id="@+id/btnShareHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@android:drawable/ic_menu_share"
-                    app:tint="@android:color/white"
                     android:layout_gravity="end"
                     android:layout_marginEnd="16dp"
-                    android:contentDescription="Share"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
+                    android:contentDescription="Share"
                     android:focusable="true"
-                    android:padding="8dp"/>
+                    android:padding="8dp"
+                    android:src="@android:drawable/ic_menu_share"
+                    app:tint="@android:color/white" />
 
             </com.google.android.material.appbar.MaterialToolbar>
 
@@ -114,30 +113,34 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvCarBrandDetail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:background="#E3F2FD"
+                        android:letterSpacing="0.1"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="4dp"
                         android:text="MEREK"
                         android:textAllCaps="true"
-                        android:letterSpacing="0.1"
                         android:textColor="@color/blue"
                         android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:background="#E3F2FD"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="4dp"/>
+                        android:textStyle="bold" />
 
-                    <Space android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
 
                     <ImageView
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:src="@drawable/ic_home"
-                        app:tint="@color/gray"/>
+                        app:tint="@color/gray" />
+
                     <TextView
                         android:id="@+id/tvCarLocationDetail"
                         android:layout_width="wrap_content"
@@ -145,170 +148,241 @@
                         android:layout_marginStart="4dp"
                         android:text="Lokasi"
                         android:textColor="#888"
-                        android:textSize="12sp"/>
+                        android:textSize="12sp" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvCarNameDetail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:text="Nama Mobil"
                     android:textColor="@color/blue"
                     android:textSize="26sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp"/>
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvCarPriceBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
                     android:text="Rp 0"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
                     android:textColor="@color/accent_pink"
-                    android:layout_marginTop="4dp"/>
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E0E0E0"
-                android:layout_marginVertical="20dp"/>
+                android:layout_marginVertical="20dp"
+                android:background="#E0E0E0" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:baselineAligned="false">
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="85dp"
-                    android:layout_weight="1"
                     android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="#F5F7F9"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="#F5F7F9">
+                    app:cardElevation="0dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:text="Tahun" android:textColor="#888" android:textSize="10sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                        <TextView android:id="@+id/tvCarYearDetail" android:layout_marginTop="4dp" android:text="2020" android:textSize="16sp" android:textStyle="bold" android:textColor="@color/blue" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tahun"
+                            android:textColor="#888"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/tvCarYearDetail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="2020"
+                            android:textColor="@color/blue"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="85dp"
-                    android:layout_weight="1"
                     android:layout_marginHorizontal="6dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="#F5F7F9"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="#F5F7F9">
+                    app:cardElevation="0dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:text="Jarak" android:textColor="#888" android:textSize="10sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                        <TextView android:id="@+id/tvKmRangeDetail" android:layout_marginTop="4dp" android:text="15rb" android:textSize="16sp" android:textStyle="bold" android:textColor="@color/blue" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Jarak"
+                            android:textColor="#888"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/tvKmRangeDetail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="15rb"
+                            android:textColor="@color/blue"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="85dp"
-                    android:layout_weight="1"
                     android:layout_marginHorizontal="6dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="#F5F7F9"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="#F5F7F9">
+                    app:cardElevation="0dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:text="Transmisi" android:textColor="#888" android:textSize="10sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                        <TextView android:id="@+id/tvTransmissionDetail" android:layout_marginTop="4dp" android:text="Auto" android:textSize="16sp" android:textStyle="bold" android:textColor="@color/blue" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Transmisi"
+                            android:textColor="#888"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/tvTransmissionDetail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Auto"
+                            android:textColor="@color/blue"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="85dp"
-                    android:layout_weight="1"
                     android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="#F5F7F9"
                     app:cardCornerRadius="12dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="#F5F7F9">
+                    app:cardElevation="0dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:text="BBM" android:textColor="#888" android:textSize="10sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                        <TextView android:id="@+id/tvFuelDetail" android:layout_marginTop="4dp" android:text="Bensin" android:textSize="16sp" android:textStyle="bold" android:textColor="@color/blue" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="BBM"
+                            android:textColor="#888"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/tvFuelDetail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Bensin"
+                            android:textColor="@color/blue"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginVertical="24dp"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="24dp"
+                android:background="#E0E0E0" />
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/white">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:gravity="center_vertical"
+                    android:orientation="horizontal"
                     android:padding="16dp">
 
                     <ImageView
+                        android:id="@+id/ivSellerAvatar"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
-                        android:src="@drawable/ic_person"
                         android:background="@drawable/circle_bg"
                         android:padding="10dp"
-                        app:tint="@color/gray"/>
+                        android:src="@drawable/ic_person" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
+                        android:orientation="vertical">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="DIJUAL OLEH"
-                            android:textSize="10sp"
                             android:textColor="#888"
-                            android:textStyle="bold"/>
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
                         <TextView
                             android:id="@+id/tvSellerDetail"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
                             android:text="Nama Penjual"
-                            android:textStyle="bold"
                             android:textColor="@color/black"
                             android:textSize="16sp"
-                            android:maxLines="1"
-                            android:ellipsize="end"/>
+                            android:textStyle="bold" />
+
                         <TextView
                             android:id="@+id/tvContactDetail"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="No Kontak"
-                            android:textSize="12sp"
-                            android:textColor="#666"/>
+                            android:textColor="#666"
+                            android:textSize="12sp" />
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -316,16 +390,16 @@
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
+                        android:backgroundTint="#E3F2FD"
                         android:insetLeft="0dp"
                         android:insetTop="0dp"
                         android:insetRight="0dp"
                         android:insetBottom="0dp"
+                        app:cornerRadius="25dp"
                         app:icon="@android:drawable/ic_menu_call"
-                        app:iconTint="@color/blue"
                         app:iconGravity="textStart"
                         app:iconPadding="0dp"
-                        android:backgroundTint="#E3F2FD"
-                        app:cornerRadius="25dp"
+                        app:iconTint="@color/blue"
                         app:strokeWidth="0dp" />
 
                 </LinearLayout>
@@ -334,43 +408,51 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnWhatsapp"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
-                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="#FFFFFF"
+
                     android:text="WhatsApp"
-                    app:icon="@drawable/ic_wishlist"
-                    app:iconTint="@color/white"
-                    android:backgroundTint="#25D366"
-                    app:cornerRadius="12dp"/>
+                    android:textColor="#25D366"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_whatsapp"
+                    app:iconTint="@null"
+                    app:strokeColor="#25D366"
+                    app:strokeWidth="1dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCalculator"
                     android:layout_width="wrap_content"
                     android:layout_height="56dp"
+                    android:backgroundTint="#E3F2FD"
                     android:text="Kredit"
                     android:textColor="@color/blue"
-                    android:backgroundTint="#E3F2FD"
-                    app:icon="@android:drawable/ic_menu_my_calendar"
-                    app:iconTint="@color/blue"
-                    app:cornerRadius="12dp"/>
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_calculator"
+                    app:iconTint="@color/blue" />
             </LinearLayout>
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginVertical="24dp"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="24dp"
+                android:background="#E0E0E0" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:text="Spesifikasi &amp; Legalitas"
-                android:textStyle="bold"
                 android:textColor="@color/black"
                 android:textSize="16sp"
-                android:layout_marginBottom="12dp"/>
+                android:textStyle="bold" />
 
             <TableLayout
                 android:layout_width="match_parent"
@@ -378,24 +460,73 @@
                 android:stretchColumns="1">
 
                 <TableRow android:layout_marginBottom="8dp">
-                    <TextView android:text="Varian" android:textColor="#888"/>
-                    <TextView android:id="@+id/tvVariantDetail" android:text="-" android:textColor="@color/black" android:gravity="end" android:textStyle="bold"/>
+
+                    <TextView
+                        android:text="Varian"
+                        android:textColor="#888" />
+
+                    <TextView
+                        android:id="@+id/tvVariantDetail"
+                        android:gravity="end"
+                        android:text="-"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
                 </TableRow>
+
                 <TableRow android:layout_marginBottom="8dp">
-                    <TextView android:text="Tipe Bodi" android:textColor="#888"/>
-                    <TextView android:id="@+id/tvBodyDetail" android:text="-" android:textColor="@color/black" android:gravity="end" android:textStyle="bold"/>
+
+                    <TextView
+                        android:text="Tipe Bodi"
+                        android:textColor="#888" />
+
+                    <TextView
+                        android:id="@+id/tvBodyDetail"
+                        android:gravity="end"
+                        android:text="-"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
                 </TableRow>
+
                 <TableRow android:layout_marginBottom="8dp">
-                    <TextView android:text="Warna" android:textColor="#888"/>
-                    <TextView android:id="@+id/tvColorDetail" android:text="-" android:textColor="@color/black" android:gravity="end" android:textStyle="bold"/>
+
+                    <TextView
+                        android:text="Warna"
+                        android:textColor="#888" />
+
+                    <TextView
+                        android:id="@+id/tvColorDetail"
+                        android:gravity="end"
+                        android:text="-"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
                 </TableRow>
+
                 <TableRow android:layout_marginBottom="8dp">
-                    <TextView android:text="Kapasitas Mesin" android:textColor="#888"/>
-                    <TextView android:id="@+id/tvCapacityDetail" android:text="-" android:textColor="@color/black" android:gravity="end" android:textStyle="bold"/>
+
+                    <TextView
+                        android:text="Kapasitas Mesin"
+                        android:textColor="#888" />
+
+                    <TextView
+                        android:id="@+id/tvCapacityDetail"
+                        android:gravity="end"
+                        android:text="-"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
                 </TableRow>
+
                 <TableRow android:layout_marginBottom="8dp">
-                    <TextView android:text="Status Pajak" android:textColor="#888"/>
-                    <TextView android:id="@+id/tvTaxInfoDetail" android:text="-" android:textColor="@color/black" android:gravity="end" android:textStyle="bold"/>
+
+                    <TextView
+                        android:text="Status Pajak"
+                        android:textColor="#888" />
+
+                    <TextView
+                        android:id="@+id/tvTaxInfoDetail"
+                        android:gravity="end"
+                        android:text="-"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
                 </TableRow>
             </TableLayout>
 
@@ -403,129 +534,140 @@
                 android:id="@+id/layoutPlateDisplay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="10dp"
+                android:gravity="center"
+                android:orientation="vertical"
                 android:visibility="gone">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="PLAT NOMOR"
-                    android:textSize="10sp"
-                    android:textColor="#888"
+                    android:layout_marginBottom="8dp"
                     android:letterSpacing="0.2"
-                    android:layout_marginBottom="8dp"/>
+                    android:text="PLAT NOMOR"
+                    android:textColor="#888"
+                    android:textSize="10sp" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_plate_number_black"
+                    android:gravity="center"
                     android:orientation="vertical"
                     android:paddingHorizontal="32dp"
-                    android:paddingVertical="12dp"
-                    android:gravity="center">
+                    android:paddingVertical="12dp">
 
                     <TextView
                         android:id="@+id/tvPlateDisplay"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:letterSpacing="0.1"
                         android:text="B 1234 XYZ"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
                         android:textSize="32sp"
-                        android:letterSpacing="0.1"/>
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvPlateTypeDisplay"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:text="GANJIL"
-                        android:textColor="#DDDDDD"
-                        android:textSize="12sp"
                         android:textAllCaps="true"
-                        android:layout_marginTop="4dp"/>
+                        android:textColor="#DDDDDD"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginVertical="24dp"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="24dp"
+                android:background="#E0E0E0" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:text="Diskusi &amp; Ulasan"
-                android:textStyle="bold"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                android:layout_marginBottom="12dp"/>
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginBottom="16dp"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/tvAvgRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0.0"
+                    android:textColor="@color/black"
                     android:textSize="32sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black"/>
+                    android:textStyle="bold" />
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginStart="12dp">
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
                     <RatingBar
                         android:id="@+id/ratingBarInput"
-                        style="?android:attr/ratingBarStyleSmall"
+                        style="?android:attr/ratingBarStyle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:isIndicator="false"
                         android:numStars="5"
-                        android:stepSize="1.0"
-                        android:progressTint="#FFD700"/>
+                        android:progressTint="#FFD700"
+                        android:stepSize="1.0" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Ketuk bintang untuk menilai"
-                        android:textSize="12sp"
-                        android:textColor="#888"/>
+                        android:textColor="#888"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp">
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCommentInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Tulis ulasan..."
                     android:inputType="textMultiLine"
-                    android:minLines="2"/>
+                    android:minLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/btnSubmitComment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Kirim"
                 android:layout_gravity="end"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="8dp"
+                android:text="Kirim" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvComments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:layout_marginTop="16dp"/>
+                android:layout_marginTop="16dp"
+                android:nestedScrollingEnabled="false" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -10,7 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager // 1. Pastikan import ini ada
 import com.example.c_otomatch.SellCarActivity
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.databinding.FragmentSellBinding
@@ -28,7 +28,6 @@ class SellFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
 
-    // Launcher untuk refresh setelah edit/add
     private val addCarLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -58,7 +57,9 @@ class SellFragment : Fragment() {
             isSellFragment = true
         )
 
-        binding.recyclerSellCars.layoutManager = LinearLayoutManager(requireContext())
+        // 2. UBAH DARI LinearLayoutManager KE GridLayoutManager (2 kolom)
+        // Ini akan membuat card menjadi setengah lebar layar, otomatis tingginya mengecil
+        binding.recyclerSellCars.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.recyclerSellCars.adapter = adapter
 
         binding.fabAddCar.setOnClickListener {
@@ -79,8 +80,6 @@ class SellFragment : Fragment() {
             return
         }
 
-        // Tampilkan loading (opsional, atau biarkan state sebelumnya)
-
         db.collection("cars")
             .whereEqualTo("sellerUid", user.uid)
             .get(Source.SERVER)
@@ -96,31 +95,22 @@ class SellFragment : Fragment() {
                     }
                 }
 
-                // Sort: Yang belum terjual di atas, yang terjual di bawah
                 myCarsList.sortBy { it.isSold }
                 adapter.updateList(myCarsList)
 
-                // --- LOGIKA EMPTY STATE (PERUBAHAN DISINI) ---
                 if (myCarsList.isEmpty()) {
-                    // Jika data KOSONG (berhasil fetch tapi 0 items)
                     binding.recyclerSellCars.visibility = View.GONE
                     binding.emptyStateLayout.visibility = View.VISIBLE
                 } else {
-                    // Jika ADA data
                     binding.recyclerSellCars.visibility = View.VISIBLE
                     binding.emptyStateLayout.visibility = View.GONE
                 }
             }
             .addOnFailureListener {
-                // Jika GAGAL (misal sinyal jelek), jangan tampilkan empty state "Belum Jual"
-                // Biarkan user tau kalau ini error
                 Toast.makeText(context, "Gagal memuat data: Cek koneksi internet", Toast.LENGTH_SHORT).show()
                 Log.e("SellFragment", "Error fetching data", it)
             }
     }
-
-    // ... (Sisa fungsi showCarOptionsDialog, startEditCarActivity, deleteCar, toggleSoldStatus, deleteTransaction SAMA SEPERTI SEBELUMNYA) ...
-    // Copy paste fungsi-fungsi di bawah ini dari kode lama Anda:
 
     private fun showCarOptionsDialog(car: Car) {
         val options = if (car.isSold)
