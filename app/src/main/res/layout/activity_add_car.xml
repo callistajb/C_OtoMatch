@@ -41,7 +41,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Foto Mobil (Wajib)"
+                android:text="Foto Mobil"
                 android:textStyle="bold"
                 android:textColor="@color/blue"
                 android:layout_marginBottom="8dp"/>
@@ -142,7 +142,7 @@
                     android:id="@+id/etSellerName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Nama Penjual (wajib)" />
+                    android:hint="Nama Penjual" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -155,7 +155,7 @@
                     android:id="@+id/etSellerContact"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Kontak Penjual (wajib)"
+                    android:hint="Kontak Penjual"
                     android:inputType="phone" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -216,7 +216,7 @@
                     android:id="@+id/etManualBrand"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Tulis Merek Mobil (Manual)" />
+                    android:hint="Tulis Merek Mobil" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -248,7 +248,7 @@
                     android:id="@+id/etManualModel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Tulis Model Mobil (Manual)" />
+                    android:hint="Tulis Model Mobil" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout

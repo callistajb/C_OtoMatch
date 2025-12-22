@@ -30,7 +30,7 @@
                 android:id="@+id/inputName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nama Lengkap (wajib)"
+                android:hint="Nama Lengkap"
                 android:inputType="textPersonName"
                 android:maxLines="1"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -44,7 +44,7 @@
                 android:id="@+id/inputUsername"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Username (wajib)"
+                android:hint="Username"
                 android:inputType="text"
                 android:maxLines="1"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -58,7 +58,7 @@
                 android:id="@+id/inputEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email (wajib)"
+                android:hint="Email"
                 android:inputType="textEmailAddress"
                 android:maxLines="1"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -72,7 +72,7 @@
                 android:id="@+id/inputPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Nomor HP (wajib)"
+                android:hint="Nomor HP"
                 android:inputType="phone"
                 android:maxLines="1"/>
         </com.google.android.material.textfield.TextInputLayout>
