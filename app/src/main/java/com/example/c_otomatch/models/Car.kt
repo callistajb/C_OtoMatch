@@ -26,6 +26,9 @@ data class Car(
     @get:PropertyName("isSold") @set:PropertyName("isSold")
     var isSold: Boolean = false,
 
+    @get:PropertyName("rating") @set:PropertyName("rating")
+    var rating: Double = 0.0,
+
     @get:Exclude
     var isWishlist: Boolean = false,
 
@@ -50,6 +53,8 @@ data class Car(
     var taxDate: String = "",
     var plateNumber: String = "",
     var plateType: String = "",
+
+    var isSuspicious: Boolean = false, // Tambahan dari fitur sebelumnya
 
     @ServerTimestamp
     val createdAt: Date? = null,

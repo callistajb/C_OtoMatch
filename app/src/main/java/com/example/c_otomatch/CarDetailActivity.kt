@@ -3,6 +3,7 @@ package com.example.c_otomatch
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ArrayAdapter
@@ -33,8 +34,9 @@ class CarDetailActivity : AppCompatActivity() {
     private val commentList = mutableListOf<Comment>()
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
-    private var carDocumentId: String? = null
 
+    private var carDocumentId: String? = null
+    private var sellerUid: String? = null // ID Penjual untuk update rating global
     private var carPriceLong: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,12 +52,16 @@ class CarDetailActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         binding.toolbarCarDetail.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        // --- TOMBOL SHARE (BARU) ---
-        binding.btnShareHeader.setOnClickListener {
-            shareCarListing()
-        }
+        // --- TOMBOL SHARE ---
+        binding.btnShareHeader.setOnClickListener { shareCarListing() }
 
+        // --- AMBIL DATA DARI INTENT ---
         carDocumentId = intent.getStringExtra("car_document_id")
+
+        // Coba ambil sellerUid dari intent (jika dikirim dari Adapter)
+        // Jika null, nanti kita ambil dari fetch data mobil
+        sellerUid = intent.getStringExtra("seller_uid")
+
         val carName = intent.getStringExtra("car_name").orEmpty()
         val carPrice = intent.getStringExtra("car_price").orEmpty()
 
@@ -65,73 +71,16 @@ class CarDetailActivity : AppCompatActivity() {
             0L
         }
 
-        // --- SET TEXT AWAL ---
-        binding.apply {
-            tvCarNameDetail.text = carName
-            tvCarBrandDetail.text = intent.getStringExtra("car_brand").orEmpty()
-
-            // Highlight Specs (Sekarang Label di Atas, Value di Bawah)
-            tvCarYearDetail.text = intent.getIntExtra("car_year", 0).toString()
-            tvKmRangeDetail.text = intent.getStringExtra("car_mileage").orEmpty()
-            tvTransmissionDetail.text =
-                intent.getStringExtra("transmission").orEmpty().ifEmpty { "-" }
-            tvFuelDetail.text = intent.getStringExtra("fuel").orEmpty().ifEmpty { "-" }
-
-            // Header Info
-            tvCarPriceBadge.text = carPrice
-            tvCarLocationDetail.text = intent.getStringExtra("car_location").orEmpty()
-
-            // Detail Table
-            tvVariantDetail.text = intent.getStringExtra("variant").orEmpty().ifEmpty { "-" }
-            tvBodyDetail.text = intent.getStringExtra("body_type").orEmpty().ifEmpty { "-" }
-            tvColorDetail.text = intent.getStringExtra("color").orEmpty().ifEmpty { "-" }
-            tvCapacityDetail.text = intent.getStringExtra("capacity").orEmpty().ifEmpty { "-" }
-
-            // Seller Info
-            tvSellerDetail.text = intent.getStringExtra("seller_name").orEmpty()
-            tvContactDetail.text =
-                intent.getStringExtra("seller_contact").orEmpty().ifEmpty { "Tidak tersedia" }
-        }
+        // --- SET TEXT UI STATIC (Agar langsung tampil sebelum loading DB) ---
+        setupStaticUI(carName, carPrice)
 
         val thumbUrl = intent.getStringExtra("car_image_url").orEmpty()
         setupImageSlider(thumbUrl)
 
-        // --- FETCH DATA LENGKAP ---
+        // --- FETCH DATA LENGKAP DARI FIRESTORE ---
         if (carDocumentId != null) {
-            db.collection("cars").document(carDocumentId!!).get().addOnSuccessListener { document ->
-                    val car = document.toObject(Car::class.java)
-                    if (car != null) {
-                        updateSliderWithFullData(car)
-
-                        binding.apply {
-                            // 1. Pajak dengan Warna
-                            if (car.taxStatus == "Mati") {
-                                tvTaxInfoDetail.text = "Mati (s/d ${car.taxDate})"
-                                tvTaxInfoDetail.setTextColor(
-                                    ContextCompat.getColor(
-                                        this@CarDetailActivity, R.color.red
-                                    )
-                                )
-                            } else {
-                                tvTaxInfoDetail.text = "Hidup"
-                                tvTaxInfoDetail.setTextColor(
-                                    ContextCompat.getColor(
-                                        this@CarDetailActivity, R.color.green
-                                    )
-                                )
-                            }
-
-                            // 2. PLAT NOMOR VISUAL (SEKARANG DI BAWAH)
-                            if (car.plateNumber.isNotEmpty()) {
-                                layoutPlateDisplay.visibility = View.VISIBLE
-                                tvPlateDisplay.text = car.plateNumber
-                                tvPlateTypeDisplay.text = car.plateType
-                            } else {
-                                layoutPlateDisplay.visibility = View.GONE
-                            }
-                        }
-                    }
-                }
+            loadFullCarData()
+            loadComments(carDocumentId!!)
         }
 
         setupComments()
@@ -147,80 +96,229 @@ class CarDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun shareCarListing() {
-        val carName = binding.tvCarNameDetail.text.toString()
-        val carPrice = binding.tvCarPriceBadge.text.toString()
-        val carLoc = binding.tvCarLocationDetail.text.toString()
+    private fun setupStaticUI(carName: String, carPrice: String) {
+        binding.apply {
+            tvCarNameDetail.text = carName
+            tvCarBrandDetail.text = intent.getStringExtra("car_brand").orEmpty()
+            tvCarYearDetail.text = intent.getIntExtra("car_year", 0).toString()
+            tvKmRangeDetail.text = intent.getStringExtra("car_mileage").orEmpty()
+            tvTransmissionDetail.text =
+                intent.getStringExtra("transmission").orEmpty().ifEmpty { "-" }
+            tvFuelDetail.text = intent.getStringExtra("fuel").orEmpty().ifEmpty { "-" }
+            tvCarPriceBadge.text = carPrice
+            tvCarLocationDetail.text = intent.getStringExtra("car_location").orEmpty()
 
-        val shareText = """
-            Cek mobil ini di OtoMatch! 🚗💨
-            
-            *$carName*
-            Harga: $carPrice
-            Lokasi: $carLoc
-            
-            Tertarik? Yuk lihat detailnya di aplikasi OtoMatch!
-        """.trimIndent()
+            // Detail Table
+            tvVariantDetail.text = intent.getStringExtra("variant").orEmpty().ifEmpty { "-" }
+            tvBodyDetail.text = intent.getStringExtra("body_type").orEmpty().ifEmpty { "-" }
+            tvColorDetail.text = intent.getStringExtra("color").orEmpty().ifEmpty { "-" }
+            tvCapacityDetail.text = intent.getStringExtra("capacity").orEmpty().ifEmpty { "-" }
 
-        val sendIntent: Intent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, shareText)
-            type = "text/plain"
+            tvSellerDetail.text = intent.getStringExtra("seller_name").orEmpty()
+            tvContactDetail.text =
+                intent.getStringExtra("seller_contact").orEmpty().ifEmpty { "Tidak tersedia" }
         }
-
-        val shareIntent = Intent.createChooser(sendIntent, "Bagikan mobil via...")
-        startActivity(shareIntent)
     }
 
-    private fun showLoanCalculatorDialog() {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_kalkulator, null)
-        val etDP = dialogView.findViewById<TextInputEditText>(R.id.etDownPayment)
-        val actTenor = dialogView.findViewById<AutoCompleteTextView>(R.id.actTenor)
-        val btnHitung = dialogView.findViewById<Button>(R.id.btnCalculate)
-        val tvResult = dialogView.findViewById<TextView>(R.id.tvMonthlyResult)
+    private fun loadFullCarData() {
+        db.collection("cars").document(carDocumentId!!).get().addOnSuccessListener { document ->
+            val car = document.toObject(Car::class.java)
+            if (car != null) {
+                // Pastikan kita punya Seller UID untuk rating logic nanti
+                if (sellerUid.isNullOrEmpty()) {
+                    sellerUid = car.sellerUid
+                }
 
-        val tenorOptions = listOf("1 Tahun", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun")
-        actTenor.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, tenorOptions))
+                // Ambil & Tampilkan Rating Penjual
+                loadSellerRating(car.sellerUid)
 
-        etDP.addTextChangedListener(NumberTextWatcher(etDP))
+                updateSliderWithFullData(car)
 
-        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+                binding.apply {
+                    if (car.taxStatus == "Mati") {
+                        tvTaxInfoDetail.text = "Mati (s/d ${car.taxDate})"
+                        tvTaxInfoDetail.setTextColor(
+                            ContextCompat.getColor(
+                                this@CarDetailActivity,
+                                R.color.red
+                            )
+                        )
+                    } else {
+                        tvTaxInfoDetail.text = "Hidup"
+                        tvTaxInfoDetail.setTextColor(
+                            ContextCompat.getColor(
+                                this@CarDetailActivity,
+                                R.color.green
+                            )
+                        )
+                    }
 
-        btnHitung.setOnClickListener {
-            val dpString = NumberTextWatcher.cleanDigits(etDP.text.toString())
-            val dp = dpString.toLongOrNull() ?: 0L
-            val tenorString = actTenor.text.toString()
-            val years = tenorString.split(" ")[0].toIntOrNull() ?: 0
-
-            if (dp <= 0 || years == 0) {
-                Toast.makeText(this, "Mohon lengkapi data DP dan Tenor.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                    if (car.plateNumber.isNotEmpty()) {
+                        layoutPlateDisplay.visibility = View.VISIBLE
+                        tvPlateDisplay.text = car.plateNumber
+                        tvPlateTypeDisplay.text = car.plateType
+                    } else {
+                        layoutPlateDisplay.visibility = View.GONE
+                    }
+                }
             }
-            if (dp >= carPriceLong) {
-                Toast.makeText(this, "Nominal DP tidak valid.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val pokokHutang = carPriceLong - dp
-            val bungaPerTahun = 0.08
-            val totalBunga = (pokokHutang * bungaPerTahun * years).toLong()
-            val totalHutang = pokokHutang + totalBunga
-            val cicilanPerBulan = totalHutang / (years * 12)
-
-            tvResult.text =
-                "Estimasi Cicilan:\n${NumberTextWatcher.formatToRupiah(cicilanPerBulan)} / bulan"
+        }.addOnFailureListener {
+            Log.e("CarDetail", "Gagal load data mobil: ${it.message}")
         }
-        dialog.show()
     }
 
-    private fun setupImageSlider(thumbnailUrl: String) {
-        val initialList = ArrayList<Any>()
-        if (thumbnailUrl.isNotEmpty()) {
-            initialList.add(thumbnailUrl)
+    private fun loadSellerRating(uid: String) {
+        if (uid.isEmpty()) return
+
+        db.collection("users").document(uid).get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val rating = document.getDouble("rating")?.toFloat() ?: 0.0f
+                val currentName = binding.tvSellerDetail.text.toString()
+
+                // Tampilkan nama + rating bintang di UI
+                binding.tvSellerDetail.text = "$currentName  ★ ${String.format("%.1f", rating)}"
+            }
         }
-        val adapter = ImageSliderAdapter(initialList)
-        binding.vpDetailImages.adapter = adapter
-        binding.tvImageCount.text = if (initialList.isNotEmpty()) "1/1" else "0/0"
+    }
+
+    private fun setupComments() {
+        commentAdapter = CommentAdapter(commentList)
+        binding.rvComments.apply {
+            layoutManager = LinearLayoutManager(this@CarDetailActivity)
+            adapter = commentAdapter
+            setHasFixedSize(true)
+        }
+
+        binding.btnSubmitComment.setOnClickListener {
+            submitCommentLogic()
+        }
+    }
+
+    // --- LOGIKA UTAMA: SUBMIT & UPDATE RATING ---
+    private fun submitCommentLogic() {
+        val text = binding.etCommentInput.text.toString().trim()
+        val rating = binding.ratingBarInput.rating
+
+        if (auth.currentUser == null) {
+            Toast.makeText(this, "Silakan login untuk mengirim ulasan.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (text.isEmpty()) {
+            binding.etCommentInput.error = "Ulasan tidak boleh kosong"
+            return
+        }
+        if (rating == 0f) {
+            Toast.makeText(this, "Mohon beri bintang", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        binding.btnSubmitComment.isEnabled = false // Cegah spam klik
+
+        // 1. Ambil nama user yg sedang login
+        db.collection("users").document(auth.currentUser!!.uid).get().addOnSuccessListener {
+            val name = it.getString("name") ?: "Pengguna"
+            val comment = Comment(name, text, rating, auth.currentUser!!.uid)
+
+            // 2. Simpan Komentar ke Sub-collection 'comments' di dalam dokumen mobil
+            db.collection("cars").document(carDocumentId!!).collection("comments").add(comment)
+                .addOnSuccessListener {
+                    binding.etCommentInput.setText("")
+                    binding.ratingBarInput.rating = 0f
+
+                    // Update list lokal
+                    commentList.add(0, comment)
+                    commentAdapter.notifyItemInserted(0)
+                    binding.rvComments.scrollToPosition(0)
+
+                    // 3. HITUNG ULANG RATING (Mobil & Seller)
+                    recalculateCarRating()
+
+                    Toast.makeText(this, "Ulasan terkirim!", Toast.LENGTH_SHORT).show()
+                    binding.btnSubmitComment.isEnabled = true
+                }
+                .addOnFailureListener {
+                    binding.btnSubmitComment.isEnabled = true
+                    Toast.makeText(this, "Gagal mengirim ulasan", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    // Hitung rata-rata rating untuk MOBIL ini
+    private fun recalculateCarRating() {
+        db.collection("cars").document(carDocumentId!!).collection("comments").get()
+            .addOnSuccessListener { querySnapshot ->
+                var total = 0.0
+                var count = 0
+                for (doc in querySnapshot) {
+                    val r = doc.getDouble("rating") ?: 0.0
+                    if (r > 0) {
+                        total += r
+                        count++
+                    }
+                }
+
+                val avgCarRating = if (count > 0) total / count else 0.0
+
+                // Update field 'rating' di Dokumen Mobil
+                db.collection("cars").document(carDocumentId!!)
+                    .update("rating", avgCarRating)
+                    .addOnSuccessListener {
+                        // Update UI rata-rata mobil di halaman ini
+                        binding.tvAvgRating.text = String.format("%.1f", avgCarRating)
+
+                        // 4. SETELAH MOBIL DIUPDATE, HITUNG RATING GLOBAL SELLER
+                        if (!sellerUid.isNullOrEmpty()) {
+                            recalculateSellerGlobalRating(sellerUid!!)
+                        }
+                    }
+            }
+    }
+
+    // Hitung rata-rata rating untuk PENJUAL (Dari semua mobil yang dia punya)
+    private fun recalculateSellerGlobalRating(uid: String) {
+        db.collection("cars").whereEqualTo("sellerUid", uid).get()
+            .addOnSuccessListener { result ->
+                var totalRating = 0.0
+                var ratedCarsCount = 0
+
+                for (doc in result) {
+                    // Ambil rating masing-masing mobil
+                    val r = doc.getDouble("rating") ?: 0.0
+                    // Hanya hitung mobil yang sudah ada ratingnya (> 0)
+                    if (r > 0.0) {
+                        totalRating += r
+                        ratedCarsCount++
+                    }
+                }
+
+                val finalSellerRating =
+                    if (ratedCarsCount > 0) totalRating / ratedCarsCount else 0.0
+
+                // Update field 'rating' di Dokumen User (Penjual)
+                db.collection("users").document(uid).update("rating", finalSellerRating)
+                    .addOnSuccessListener {
+                        Log.d("RatingSystem", "Seller rating updated: $finalSellerRating")
+                        // Refresh UI Seller Rating di halaman ini agar langsung berubah
+                        loadSellerRating(uid)
+                    }
+            }
+    }
+
+    private fun loadComments(carId: String) {
+        db.collection("cars").document(carId).collection("comments")
+            .orderBy("rating", Query.Direction.DESCENDING).get().addOnSuccessListener { result ->
+                commentList.clear()
+                for (doc in result) commentList.add(doc.toObject(Comment::class.java))
+                commentAdapter.notifyDataSetChanged()
+
+                // Hitung rata-rata lokal untuk tampilan awal (visual saja)
+                if (commentList.isNotEmpty()) {
+                    val avg = commentList.map { it.rating }.average()
+                    binding.tvAvgRating.text = "%.1f".format(avg)
+                } else {
+                    binding.tvAvgRating.text = "0.0"
+                }
+            }
     }
 
     private fun updateSliderWithFullData(car: Car) {
@@ -240,17 +338,24 @@ class CarDetailActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupImageSlider(thumbnailUrl: String) {
+        val initialList = ArrayList<Any>()
+        if (thumbnailUrl.isNotEmpty()) initialList.add(thumbnailUrl)
+        val adapter = ImageSliderAdapter(initialList)
+        binding.vpDetailImages.adapter = adapter
+        binding.tvImageCount.text = if (initialList.isNotEmpty()) "1/1" else "0/0"
+    }
+
     private fun setupActionButtons(contact: String, name: String, year: Int, price: String) {
-        // Tombol Telepon (Icon di dalam Card)
         binding.btnContactSeller.setOnClickListener {
             if (contact.isNotEmpty()) startActivity(
                 Intent(
-                    Intent.ACTION_DIAL, Uri.parse("tel:$contact")
+                    Intent.ACTION_DIAL,
+                    Uri.parse("tel:$contact")
                 )
             )
             else Toast.makeText(this, "Nomor kontak tidak tersedia.", Toast.LENGTH_SHORT).show()
         }
-        // Tombol WA
         binding.btnWhatsapp.setOnClickListener {
             if (contact.isNotEmpty()) {
                 var phone = contact
@@ -268,64 +373,65 @@ class CarDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupComments() {
-        commentAdapter = CommentAdapter(commentList)
-        binding.rvComments.apply {
-            layoutManager = LinearLayoutManager(this@CarDetailActivity)
-            adapter = commentAdapter
-            setHasFixedSize(true)
+    private fun shareCarListing() {
+        val carName = binding.tvCarNameDetail.text.toString()
+        val carPrice = binding.tvCarPriceBadge.text.toString()
+        val carLoc = binding.tvCarLocationDetail.text.toString()
+        val shareText =
+            "Cek mobil ini di OtoMatch! 🚗💨\n\n*$carName*\nHarga: $carPrice\nLokasi: $carLoc"
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
         }
-        if (carDocumentId != null) loadComments(carDocumentId!!)
-
-        binding.btnSubmitComment.setOnClickListener {
-            val text = binding.etCommentInput.text.toString().trim()
-            val rating = binding.ratingBarInput.rating
-            if (auth.currentUser == null) {
-                Toast.makeText(this, "Silakan login untuk mengirim komentar.", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            }
-            if (text.isEmpty()) {
-                binding.etCommentInput.error = "Komentar tidak boleh kosong"
-                return@setOnClickListener
-            }
-            if (rating == 0f) {
-                Toast.makeText(this, "Mohon beri rating bintang", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            db.collection("users").document(auth.currentUser!!.uid).get().addOnSuccessListener {
-                val name = it.getString("name") ?: "Pengguna"
-                val comment = Comment(name, text, rating, auth.currentUser!!.uid)
-                db.collection("cars").document(carDocumentId!!).collection("comments").add(comment)
-                    .addOnSuccessListener {
-                        binding.etCommentInput.setText("")
-                        binding.ratingBarInput.rating = 0f
-                        commentList.add(0, comment)
-                        commentAdapter.notifyItemInserted(0)
-                        binding.rvComments.scrollToPosition(0)
-                        updateAvgRating()
-                        Toast.makeText(this, "Komentar terkirim.", Toast.LENGTH_SHORT).show()
-                    }
-            }
-        }
+        startActivity(Intent.createChooser(sendIntent, "Bagikan mobil via..."))
     }
 
-    private fun loadComments(carId: String) {
-        db.collection("cars").document(carId).collection("comments")
-            .orderBy("rating", Query.Direction.DESCENDING).get().addOnSuccessListener { result ->
-                commentList.clear()
-                for (doc in result) commentList.add(doc.toObject(Comment::class.java))
-                commentAdapter.notifyDataSetChanged()
-                updateAvgRating()
-            }
-    }
+    private fun showLoanCalculatorDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_kalkulator, null)
+        val etDP = dialogView.findViewById<TextInputEditText>(R.id.etDownPayment)
+        val etInterest = dialogView.findViewById<TextInputEditText>(R.id.etInterestRate)
+        val actTenor = dialogView.findViewById<AutoCompleteTextView>(R.id.actTenor)
+        val btnHitung = dialogView.findViewById<Button>(R.id.btnCalculate)
+        val cvResult = dialogView.findViewById<View>(R.id.cvResultContainer)
+        val tvPrincipal = dialogView.findViewById<TextView>(R.id.tvPrincipal)
+        val tvTotalInterest = dialogView.findViewById<TextView>(R.id.tvTotalInterest)
+        val tvMonthlyResult = dialogView.findViewById<TextView>(R.id.tvMonthlyResult)
 
-    private fun updateAvgRating() {
-        if (commentList.isNotEmpty()) {
-            val avg = commentList.map { it.rating }.average()
-            binding.tvAvgRating.text = "%.1f".format(avg)
-        } else {
-            binding.tvAvgRating.text = "0.0"
+        val tenorOptions = listOf("1 Tahun", "2 Tahun", "3 Tahun", "4 Tahun", "5 Tahun")
+        actTenor.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, tenorOptions))
+
+        val defaultDP = (carPriceLong * 0.2).toLong()
+        etDP.setText(NumberTextWatcher.formatToRupiah(defaultDP))
+        etDP.addTextChangedListener(NumberTextWatcher(etDP))
+
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        btnHitung.setOnClickListener {
+            val dpString = NumberTextWatcher.cleanDigits(etDP.text.toString())
+            val dp = dpString.toLongOrNull() ?: 0L
+            val interestRateStr = etInterest.text.toString()
+            val interestRate = interestRateStr.toDoubleOrNull() ?: 8.0
+            val tenorString = actTenor.text.toString()
+            val years = tenorString.split(" ")[0].toIntOrNull() ?: 3
+
+            if (dp <= 0 || dp >= carPriceLong) {
+                etDP.error = "DP tidak valid"; return@setOnClickListener
+            }
+
+            val pokokHutang = carPriceLong - dp
+            val totalBunga = (pokokHutang * (interestRate / 100) * years).toLong()
+            val totalPinjaman = pokokHutang + totalBunga
+            val cicilanPerBulan = totalPinjaman / (years * 12)
+
+            cvResult.visibility = View.VISIBLE
+            tvPrincipal.text = NumberTextWatcher.formatToRupiah(pokokHutang)
+            tvTotalInterest.text = "+ ${NumberTextWatcher.formatToRupiah(totalBunga)}"
+            tvMonthlyResult.text = "${NumberTextWatcher.formatToRupiah(cicilanPerBulan)} /bln"
+            cvResult.alpha = 0f
+            cvResult.animate().alpha(1f).setDuration(300).start()
         }
+        dialog.show()
     }
 }

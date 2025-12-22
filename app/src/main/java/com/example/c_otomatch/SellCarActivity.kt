@@ -797,11 +797,21 @@ class SellCarActivity : AppCompatActivity() {
     }
 
     private fun checkStoragePermission() {
+        val permissionToRequest = if (Build.VERSION.SDK_INT >= 33) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
         if (ContextCompat.checkSelfPermission(
                 this,
-                if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
+                permissionToRequest
             ) == PackageManager.PERMISSION_GRANTED
-        ) pickMultipleImages.launch("image/*") else requestStoragePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+        ) {
+            pickMultipleImages.launch("image/*")
+        } else {
+            requestStoragePermissionLauncher.launch(permissionToRequest)
+        }
     }
 
     private fun getImageUriFromBitmap(bitmap: Bitmap): Uri? {

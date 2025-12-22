@@ -1,119 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="10dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="6dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="120dp">
+        <ImageView
+            android:id="@+id/imgCar"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_car"
+            app:layout_constraintDimensionRatio="4:3"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/imgCar"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_car"
-                android:contentDescription="Car image" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:background="@drawable/gradient_bottom"
+            app:layout_constraintBottom_toBottomOf="@id/imgCar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
-            <ImageView
-                android:id="@+id/btnFavorite"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="top|end"
-                android:layout_margin="8dp"
-                android:src="@drawable/ic_wishlist_border"
-                android:background="@drawable/circle_bg"
-                android:padding="6dp"
-                app:tint="@color/accent_pink"
-                android:contentDescription="Favorite button" />
+        <TextView
+            android:id="@+id/tvCarPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_price_glass"
+            android:fontFamily="@font/lato_regular"
+            android:text="Rp 450.000.000"
+            android:textColor="#FFD700"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/tvSoldLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top|start"
-                android:layout_margin="8dp"
-                android:background="@drawable/bg_sold_label"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:text="SOLD"
-                android:textColor="@android:color/white"
-                android:textStyle="bold"
-                android:textSize="10sp"
-                android:visibility="gone" />
-        </FrameLayout>
+        <ImageView
+            android:id="@+id/btnFavorite"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/circle_bg"
+            android:backgroundTint="#F5F5F5"
+            android:clickable="true"
+            android:contentDescription="Favorite"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:padding="9dp"
+            android:src="@drawable/ic_wishlist_border"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/accent_pink" />
+
+        <TextView
+            android:id="@+id/tvSoldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_sold_label"
+            android:backgroundTint="#D32F2F"
+            android:fontFamily="@font/lato_regular"
+            android:letterSpacing="0.2"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
+            android:text="SOLD OUT"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/imgCar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/imgCar" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="16dp"
+            app:layout_constraintTop_toBottomOf="@id/imgCar">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvCarBrand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lato_regular"
+                    android:letterSpacing="0.1"
+                    android:text="TOYOTA"
+                    android:textAllCaps="true"
+                    android:textColor="#888888"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="4dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="@drawable/circle_bg"
+                    android:backgroundTint="#CCCCCC" />
+
+                <TextView
+                    android:id="@+id/tvCarYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lato_regular"
+                    android:text="2022"
+                    android:textColor="#888888"
+                    android:textSize="10sp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvCarName"
-                android:fontFamily="@font/lato_regular"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Civic Turbo"
-                android:textStyle="bold"
-                android:textSize="15sp"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/lato_regular"
                 android:maxLines="1"
-                android:ellipsize="end"/>
-
-            <TextView
-                android:id="@+id/tvCarBrand"
-                android:fontFamily="@font/lato_regular"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Honda"
-                android:textColor="#666"
-                android:textSize="12sp"/>
-
-            <TextView
-                android:id="@+id/tvCarPrice"
-                android:fontFamily="@font/lato_regular"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Rp 420.000.000"
-                android:textColor="@color/red"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:layout_marginTop="4dp"/>
+                android:text="Fortuner GR Sport"
+                android:textColor="@color/blue"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btnMarkSold"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mark as SOLD"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/edittext_bg"
+                android:backgroundTint="#F0F4F8"
                 android:gravity="center"
-                android:textColor="@android:color/white"
-                android:backgroundTint="@color/red"
-                android:paddingVertical="6dp"
-                android:textStyle="bold"
+                android:paddingVertical="8dp"
+                android:text="Tandai Terjual"
+                android:textColor="@color/blue"
                 android:textSize="12sp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_sold_label"
-                android:visibility="gone"/>
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <CheckBox
                 android:id="@+id/cbCompare"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Bandingkan"
-                android:textSize="12sp"
-                android:minHeight="0dp"
-                android:minWidth="0dp"
-                android:padding="0dp"
-                android:visibility="gone"/>
+                android:visibility="gone" />
+
         </LinearLayout>
-    </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

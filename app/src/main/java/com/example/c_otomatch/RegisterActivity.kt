@@ -115,17 +115,16 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun createUserDocumentInFirestore(uid: String, name: String, username: String, email: String, phone: String) {
-        // Siapin data user buat disimpen ke collection 'users'
         val userData = hashMapOf(
             "uid" to uid,
             "name" to name,
-            "username" to username, // Field baru
+            "username" to username,
             "email" to email,
-            "phone" to phone,       // Field baru
+            "phone" to phone,
             "location" to "",
             "profileImageUrl" to "",
-            "rating" to 4.7f,
-            "wishlist" to emptyList<String>() // Bikin field wishlist kosong, penting
+            "rating" to 0.0, // <--- INI SUDAH DIPERBAIKI JADI 0.0
+            "wishlist" to emptyList<String>()
         )
 
         db.collection("users").document(uid)
@@ -134,20 +133,16 @@ class RegisterActivity : AppCompatActivity() {
                 Log.d("RegisterActivity", "User document created in Firestore")
                 Snackbar.make(binding.root, "Registrasi berhasil — Selamat datang, $name!", Snackbar.LENGTH_SHORT).show()
 
-                // Berhasil, lempar ke MainActivity
                 val intent = Intent(this, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
             }
             .addOnFailureListener { e ->
-                // Kalo gagal simpen ke Firestore
                 Log.w("RegisterActivity", "Error creating user document", e)
                 Snackbar.make(binding.root, "Registrasi gagal (db): ${e.message}", Snackbar.LENGTH_LONG).show()
                 binding.btnRegister.isEnabled = true
                 binding.btnRegister.text = "Daftar"
-
-                // Hapus user Auth yg udah terlanjur dibuat, biar ga jadi sampah
                 auth.currentUser?.delete()
             }
     }

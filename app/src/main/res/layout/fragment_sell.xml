@@ -3,18 +3,49 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FAFAFA">
 
-    <!-- RecyclerView untuk daftar mobil -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerSellCars"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingBottom="80dp"
         android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        android:visibility="gone"/> <LinearLayout
+    android:id="@+id/emptyStateLayout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:visibility="visible"> <ImageView
+    android:layout_width="100dp"
+    android:layout_height="100dp"
+    android:src="@drawable/ic_car"
+    app:tint="#DDDDDD"
+    android:contentDescription="Ikon Mobil"/>
 
-    <!-- Floating Action Button untuk tambah mobil -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Belum ada mobil yang Anda jual"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tekan tombol + untuk mulai menjual"
+        android:textSize="14sp"
+        android:textColor="#888888"
+        android:layout_marginTop="4dp"/>
+
+</LinearLayout>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddCar"
         android:layout_width="wrap_content"
@@ -29,4 +60,5 @@
         app:srcCompat="@drawable/ic_add"
         app:tint="@color/white"
         app:useCompatPadding="true" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

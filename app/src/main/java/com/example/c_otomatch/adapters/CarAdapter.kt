@@ -38,6 +38,7 @@ class CarAdapter(
         val imgCar: ImageView = itemView.findViewById(R.id.imgCar)
         val tvCarName: TextView = itemView.findViewById(R.id.tvCarName)
         val tvCarBrand: TextView = itemView.findViewById(R.id.tvCarBrand)
+        val tvCarYear: TextView = itemView.findViewById(R.id.tvCarYear) // TAMBAHAN
         val tvCarPrice: TextView = itemView.findViewById(R.id.tvCarPrice)
         val btnFavorite: ImageView = itemView.findViewById(R.id.btnFavorite)
         val tvSoldLabel: TextView = itemView.findViewById(R.id.tvSoldLabel)
@@ -52,17 +53,15 @@ class CarAdapter(
 
     override fun onBindViewHolder(holder: CarViewHolder, position: Int) {
         val car = carList[position]
+
+        // Load Image dengan CenterCrop agar Full Bleed & HD
         val imageToLoad = if (car.imageUrls.isNotEmpty()) car.imageUrls[0] else car.imageUrl
-        Glide.with(holder.itemView.context)
-            .load(imageToLoad)
-            .placeholder(R.drawable.ic_car)
-            .error(R.drawable.ic_car)
-            .override(500, 500)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .into(holder.imgCar)
+        Glide.with(holder.itemView.context).load(imageToLoad).placeholder(R.drawable.ic_car)
+            .error(R.drawable.ic_car).diskCacheStrategy(DiskCacheStrategy.ALL).into(holder.imgCar)
 
         holder.tvCarName.text = car.name
         holder.tvCarBrand.text = car.brand
+        holder.tvCarYear.text = car.year.toString() // Set Tahun
         holder.tvCarPrice.text = formatPrice(car.price)
 
         val isWishlisted = userWishlistIds.contains(car.documentId)
@@ -72,10 +71,21 @@ class CarAdapter(
             if (isWishlisted) R.drawable.ic_wishlist else R.drawable.ic_wishlist_border
         )
 
+        // Ubah warna heart icon sesuai status
+        if (isWishlisted) {
+            holder.btnFavorite.clearColorFilter() // Merah asli icon
+        } else {
+            holder.btnFavorite.setColorFilter(android.graphics.Color.parseColor("#E7BCB4")) // Pink pudar
+        }
+
         holder.btnFavorite.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
-                Toast.makeText(holder.itemView.context, "Silakan login untuk menyimpan ke Wishlist.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    holder.itemView.context,
+                    "Silakan login untuk menyimpan ke Wishlist.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
@@ -85,9 +95,11 @@ class CarAdapter(
             if (willBeWishlist) {
                 userWishlistIds.add(car.documentId)
                 holder.btnFavorite.setImageResource(R.drawable.ic_wishlist)
+                holder.btnFavorite.clearColorFilter()
             } else {
                 userWishlistIds.remove(car.documentId)
                 holder.btnFavorite.setImageResource(R.drawable.ic_wishlist_border)
+                holder.btnFavorite.setColorFilter(android.graphics.Color.parseColor("#E7BCB4"))
             }
 
             val db = FirebaseFirestore.getInstance()
@@ -97,10 +109,8 @@ class CarAdapter(
                 if (willBeWishlist) {
                     userDocRef.update("wishlist", FieldValue.arrayUnion(car.documentId))
                         .addOnFailureListener {
-                            // Kalau gagal, balikin UI (Rollback)
                             userWishlistIds.remove(car.documentId)
                             notifyItemChanged(position)
-                            Toast.makeText(holder.itemView.context, "Gagal menambahkan ke wishlist", Toast.LENGTH_SHORT).show()
                         }
                 } else {
                     userDocRef.update("wishlist", FieldValue.arrayRemove(car.documentId))
@@ -114,17 +124,21 @@ class CarAdapter(
 
         holder.tvSoldLabel.visibility = if (car.isSold) View.VISIBLE else View.GONE
         holder.itemView.setOnClickListener { onItemClicked(car) }
-
         holder.cbCompare.visibility = View.GONE
 
+        // Logic khusus halaman Jual
         if (isSellFragment) {
             holder.btnMarkSold.visibility = View.VISIBLE
             if (car.isSold) {
-                holder.btnMarkSold.text = "TERJUAL"
-                holder.btnMarkSold.alpha = 0.5f
+                holder.btnMarkSold.text = "Kembalikan ke Stok"
+                holder.btnMarkSold.alpha = 1.0f
+                holder.btnMarkSold.background.setTint(android.graphics.Color.parseColor("#4CAF50")) // Hijau
+                holder.btnMarkSold.setTextColor(android.graphics.Color.WHITE)
             } else {
                 holder.btnMarkSold.text = "Tandai TERJUAL"
                 holder.btnMarkSold.alpha = 1.0f
+                holder.btnMarkSold.background.setTint(android.graphics.Color.parseColor("#F5F5F5"))
+                holder.btnMarkSold.setTextColor(android.graphics.Color.parseColor("#1a1a2e")) // Blue
             }
             holder.btnMarkSold.setOnClickListener { onMarkSoldClicked(car) }
         } else {
@@ -145,12 +159,22 @@ class CarAdapter(
             val value = price.replace(Regex("[^0-9]"), "").toLong()
             val formatted = NumberFormat.getNumberInstance(Locale("id", "ID")).format(value)
             "Rp $formatted"
-        } catch (e: Exception) { price }
+        } catch (e: Exception) {
+            price
+        }
     }
 
     private fun animateButton(view: View) {
-        val anim = ScaleAnimation(0.8f, 1f, 0.8f, 1f,
-            ScaleAnimation.RELATIVE_TO_SELF, 0.5f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f)
+        val anim = ScaleAnimation(
+            0.8f,
+            1f,
+            0.8f,
+            1f,
+            ScaleAnimation.RELATIVE_TO_SELF,
+            0.5f,
+            ScaleAnimation.RELATIVE_TO_SELF,
+            0.5f
+        )
         anim.duration = 150
         view.startAnimation(anim)
     }

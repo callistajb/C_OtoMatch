@@ -407,14 +407,15 @@
                 android:gravity="center"
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="10dp"
-                android:visibility="gone"> <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PLAT NOMOR"
-                android:textSize="10sp"
-                android:textColor="#888"
-                android:letterSpacing="0.2"
-                android:layout_marginBottom="8dp"/>
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PLAT NOMOR"
+                    android:textSize="10sp"
+                    android:textColor="#888"
+                    android:letterSpacing="0.2"
+                    android:layout_marginBottom="8dp"/>
 
                 <LinearLayout
                     android:layout_width="wrap_content"

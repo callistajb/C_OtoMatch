@@ -10,7 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.c_otomatch.SellCarActivity
 import com.example.c_otomatch.adapters.CarAdapter
 import com.example.c_otomatch.databinding.FragmentSellBinding
@@ -58,7 +58,7 @@ class SellFragment : Fragment() {
             isSellFragment = true
         )
 
-        binding.recyclerSellCars.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.recyclerSellCars.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerSellCars.adapter = adapter
 
         binding.fabAddCar.setOnClickListener {
@@ -79,6 +79,8 @@ class SellFragment : Fragment() {
             return
         }
 
+        // Tampilkan loading (opsional, atau biarkan state sebelumnya)
+
         db.collection("cars")
             .whereEqualTo("sellerUid", user.uid)
             .get(Source.SERVER)
@@ -93,14 +95,32 @@ class SellFragment : Fragment() {
                         Log.e("SellFragment", "Error converting car", e)
                     }
                 }
+
                 // Sort: Yang belum terjual di atas, yang terjual di bawah
                 myCarsList.sortBy { it.isSold }
                 adapter.updateList(myCarsList)
+
+                // --- LOGIKA EMPTY STATE (PERUBAHAN DISINI) ---
+                if (myCarsList.isEmpty()) {
+                    // Jika data KOSONG (berhasil fetch tapi 0 items)
+                    binding.recyclerSellCars.visibility = View.GONE
+                    binding.emptyStateLayout.visibility = View.VISIBLE
+                } else {
+                    // Jika ADA data
+                    binding.recyclerSellCars.visibility = View.VISIBLE
+                    binding.emptyStateLayout.visibility = View.GONE
+                }
             }
             .addOnFailureListener {
-                Toast.makeText(context, "Gagal memuat data", Toast.LENGTH_SHORT).show()
+                // Jika GAGAL (misal sinyal jelek), jangan tampilkan empty state "Belum Jual"
+                // Biarkan user tau kalau ini error
+                Toast.makeText(context, "Gagal memuat data: Cek koneksi internet", Toast.LENGTH_SHORT).show()
+                Log.e("SellFragment", "Error fetching data", it)
             }
     }
+
+    // ... (Sisa fungsi showCarOptionsDialog, startEditCarActivity, deleteCar, toggleSoldStatus, deleteTransaction SAMA SEPERTI SEBELUMNYA) ...
+    // Copy paste fungsi-fungsi di bawah ini dari kode lama Anda:
 
     private fun showCarOptionsDialog(car: Car) {
         val options = if (car.isSold)
@@ -152,7 +172,6 @@ class SellFragment : Fragment() {
         db.collection("cars").document(car.documentId)
             .update("isSold", newStatus)
             .addOnSuccessListener {
-
                 if (newStatus) {
                     val transactionData = hashMapOf<String, Any?>(
                         "carId" to car.documentId,
@@ -180,11 +199,7 @@ class SellFragment : Fragment() {
                 }
 
                 car.isSold = newStatus
-
-                // Sort ulang list agar yang terjual turun ke bawah
                 myCarsList.sortBy { it.isSold }
-
-                // Refresh Adapter
                 adapter.updateList(myCarsList)
 
                 val msg = if(newStatus) "Mobil ditandai TERJUAL" else "Mobil kembali TERSEDIA"
@@ -195,7 +210,6 @@ class SellFragment : Fragment() {
             }
     }
 
-    // Fungsi Transaction
     private fun deleteTransaction(carId: String, enableRollback: Boolean) {
         db.collection("transactions")
             .whereEqualTo("carId", carId)
